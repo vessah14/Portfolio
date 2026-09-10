@@ -1,0 +1,9 @@
+bin/
+obj/
+
+# Keep real credentials local. Commit only the documented template.
+appsettings.json
+appsettings.Development.json
+appsettings.Local.json
+!appsettings.Example.json
+

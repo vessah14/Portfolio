@@ -1,0 +1,30 @@
+# Dependencies and frontend build output
+**/node_modules/
+**/.next/
+**/out/
+**/coverage/
+
+# .NET build output
+**/bin/
+**/obj/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/secrets.json
+*.pem
+*.pfx
+
+# IDE and operating-system files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+.DS_Store
+Thumbs.db
+
