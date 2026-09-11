@@ -6,7 +6,7 @@ import { AddFormPanel } from "../components/AddFormPanel";
 import { Sidebar } from "../components/Sidebar";
 import { SkillForm, type SkillFormValue } from "../components/SkillForm";
 
-const API_BASE_URL = "http://localhost:5054/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
 
 type ApiSkill = {
   id: string;
