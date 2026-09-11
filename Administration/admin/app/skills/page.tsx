@@ -43,7 +43,7 @@ export default function SkillsPage() {
   const handleSavedSkill = (skill: SkillFormValue) => {
     setSkills((current) => [
       {
-        id: skill.id ?? Date.now(),
+        id: String(skill.id ?? Date.now()),
         nom: skill.name,
         progression: Number(skill.progress || 0),
         create_at: new Date().toISOString(),
