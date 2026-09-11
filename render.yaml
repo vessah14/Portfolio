@@ -33,3 +33,5 @@ services:
         value: https://portfolio-udrb-git-main-vessah14-1878s-projects.vercel.app
       - key: Cors__AllowedOrigins__1
         value: http://localhost:3000
+      - key: Cors__AllowedOrigins__2
+        value: https://admin-udrb-git-main-vessah14-1878s-projects.vercel.app
