@@ -32,6 +32,7 @@ export type ContactInfo = {
   value: string;
   iconBg: string;
   iconColor: string;
+  href: string | null;
 };
 
 export const skillCategories: SkillCategory[] = [
@@ -103,6 +104,7 @@ export const contactInfos: ContactInfo[] = [
     value: "vessah14@gmail.com",
     iconBg: "bg-red-500/10",
     iconColor: "text-red-400",
+    href: null,
   },
   {
     icon: Phone,
@@ -110,6 +112,7 @@ export const contactInfos: ContactInfo[] = [
     value: "+237 6 73 05 42 60",
     iconBg: "bg-emerald-500/10",
     iconColor: "text-emerald-400",
+    href: null,
   },
   {
     icon: MapPin,
@@ -117,6 +120,7 @@ export const contactInfos: ContactInfo[] = [
     value: "Douala-Bonaberi",
     iconBg: "bg-pink-500/10",
     iconColor: "text-pink-400",
+    href: null,
   },
 ];
 
