@@ -16,7 +16,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Vessah - Développeur Full Stack & Designer",
     template: "%s | Vessah"
@@ -28,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: "https://portfolio.vercel.app",
+    url: siteUrl,
     title: "Vessah - Développeur Full Stack & Designer",
     description: "Portfolio de Vessah, développeur Full Stack et Designer spécialisé en React, Next.js, ASP.NET Core et Design Graphique.",
     siteName: "Portfolio Vessah",
