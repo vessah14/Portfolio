@@ -8,7 +8,7 @@ import { RealisationsSection } from "./components/RealisationsSection";
 import { SkillsSection } from "./components/SkillsSection";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
 
-const API_BASE_URL = "http://localhost:5054/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
 
 type ApiProject = {
   id: string;

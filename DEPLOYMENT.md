@@ -14,7 +14,17 @@
 
 ### Étapes
 
-1. **Configurer les variables d'environnement sur Render**:
+1. **Déploiement manuel sur Render**:
+   - Allez sur Render → New Web Service
+   - Sélectionnez "Docker" comme environnement
+   - Connectez votre repository GitHub
+   - **Root Directory**: `backend`
+   - **Dockerfile Path**: `Dockerfile`
+   - **Docker Build Context Directory**: (vide)
+   - Sélectionnez le plan Free
+   - Cliquez sur "Create Web Service"
+
+2. **Configurer les variables d'environnement sur Render**:
    - `ConnectionStrings__DefaultConnection`: Votre chaîne de connexion PostgreSQL
    - `Jwt__Key`: Clé secrète pour JWT (générez une clé sécurisée)
    - `Jwt__Issuer`: "MonApi"
@@ -25,24 +35,12 @@
    - `Smtp__User`: Utilisateur SMTP
    - `Smtp__Password`: Mot de passe SMTP
    - `Smtp__NotificationRecipient`: Email de réception des notifications
-   - `Cors__AllowedOrigins__0`: URL de votre frontend Vercel
+   - `Cors__AllowedOrigins__0`: URL de votre frontend Vercel (après déploiement)
    - `Cors__AllowedOrigins__1`: URL secondaire si nécessaire
 
-2. **Déployer via render.yaml**:
-   - Connectez votre repository GitHub à Render
-   - Render détectera automatiquement le fichier `render.yaml`
-   - Le déploiement commencera automatiquement
-
-3. **Alternative: Déploiement manuel**:
-   - Créez un nouveau "Web Service" sur Render
-   - Sélectionnez "Dockerfile"
-   - Connectez votre repository
-   - Configurez les variables d'environnement
-   - Déployez
-
-### Obtenir l'URL du backend
-Après déploiement, Render vous fournira une URL comme:
-`https://portfolio-backend.onrender.com`
+### Backend déployé
+- **URL actuelle**: `https://portfolio-1-ypt3.onrender.com`
+- **Swagger**: `https://portfolio-1-ypt3.onrender.com/swagger`
 
 ## Déploiement Frontend sur Vercel
 
@@ -52,19 +50,18 @@ Après déploiement, Render vous fournira une URL comme:
 
 ### Étapes
 
-1. **Configurer les variables d'environnement sur Vercel**:
-   - `NEXT_PUBLIC_API_URL`: URL de votre backend Render
-   - Exemple: `https://portfolio-backend.onrender.com`
-
-2. **Déployer**:
+1. **Déployer**:
    - Connectez votre repository GitHub à Vercel
    - Vercel détectera automatiquement Next.js
-   - Configurez les variables d'environnement dans les settings du projet
+   - Configurez la variable d'environnement:
+     - `NEXT_PUBLIC_API_URL`: `https://portfolio-1-ypt3.onrender.com/api`
    - Déployez
 
-### Mettre à jour les CORS sur Render
-Après avoir obtenu l'URL Vercel du frontend, mettez à jour les variables d'environnement sur Render:
-- `Cors__AllowedOrigins__0`: `https://your-frontend.vercel.app`
+2. **Mettre à jour les CORS sur Render**:
+   - Après avoir obtenu l'URL Vercel du frontend
+   - Allez sur Render → Environment Variables
+   - Mettez à jour `Cors__AllowedOrigins__0` avec l'URL Vercel
+   - Exemple: `https://your-frontend.vercel.app`
 
 ## Configuration Cloudinary
 
@@ -83,12 +80,27 @@ Si vous utilisez Cloudinary pour l'upload d'images, ajoutez ces variables d'envi
 ## Structure des fichiers créés
 
 - `backend/Dockerfile`: Configuration Docker pour le backend
-- `backend/render.yaml`: Configuration Render pour le déploiement
+- `render.yaml`: Configuration Render pour le déploiement (à la racine)
 - `backend/.dockerignore`: Fichiers à exclure du build Docker
 - `frontend/vercel.json`: Configuration Vercel pour le déploiement
 
+## Modifications effectuées
+
+### Frontend
+- Remplacé `http://localhost:5054/api` par `process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api"` dans:
+  - `frontend/about/page.tsx`
+  - `frontend/about/components/ContactSection.tsx`
+  - `frontend/about/components/RealisationsSection.tsx`
+  - `frontend/about/components/SkillsSection.tsx`
+- Mis à jour `frontend/vercel.json` avec l'URL du backend
+
+### Backend
+- Créé `backend/Dockerfile` pour le conteneur Docker
+- Créé `render.yaml` à la racine pour le déploiement Render
+- Créé `backend/.dockerignore` pour exclure les fichiers inutiles
+
 ## Test du déploiement
 
-1. Testez l'API backend via Swagger: `https://your-backend.onrender.com/swagger`
+1. Testez l'API backend via Swagger: `https://portfolio-1-ypt3.onrender.com/swagger`
 2. Testez le frontend: `https://your-frontend.vercel.app`
 3. Vérifiez les logs sur Render et Vercel en cas d'erreur

@@ -6,7 +6,7 @@
   "env": {
     "NEXT_PUBLIC_API_URL": {
       "description": "Backend API URL on Render",
-      "value": "https://your-backend-url.onrender.com"
+      "value": "https://portfolio-1-ypt3.onrender.com/api"
     }
   }
 }

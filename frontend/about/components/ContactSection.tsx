@@ -6,7 +6,7 @@ import { Send } from "lucide-react";
 import { contactInfos, socials } from "@/data/about";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
 
-const API_BASE_URL = "http://localhost:5054/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
 
 export function ContactSection() {
   const { t } = useLanguage();

@@ -30,6 +30,6 @@ services:
       - key: Smtp__NotificationRecipient
         sync: false
       - key: Cors__AllowedOrigins__0
-        value: https://your-frontend-url.vercel.app
+        value: http://localhost:3000
       - key: Cors__AllowedOrigins__1
-        value: https://your-frontend-url-2.vercel.app
+        sync: false

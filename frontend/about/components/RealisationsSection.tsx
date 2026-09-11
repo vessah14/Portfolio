@@ -49,7 +49,7 @@ const normalizeCategoryName = (value: string) => {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
-const API_BASE_URL = "http://localhost:5054/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
 
 export function RealisationsSection() {
   const { t } = useLanguage();

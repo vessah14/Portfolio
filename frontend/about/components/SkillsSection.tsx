@@ -17,7 +17,7 @@ type ApiCompetence = {
   create_at: string;
 };
 
-const API_BASE_URL = "http://localhost:5054/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
 
 const skillCategoryDefinitions = [
   {
