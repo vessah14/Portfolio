@@ -1,5 +1,3 @@
-import { getAdminToken } from "./auth";
-
 const DEFAULT_API_BASE_URL = "https://portfolio-1-ypt3.onrender.com/api";
 
 export const API_BASE_URL = (
@@ -22,17 +20,7 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const headers = new Headers(init?.headers);
-  const token = getAdminToken();
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  const response = await fetch(apiUrl(path), {
-    ...init,
-    headers,
-  });
+  const response = await fetch(apiUrl(path), init);
   const responseText = await response.text();
 
   if (!response.ok) {

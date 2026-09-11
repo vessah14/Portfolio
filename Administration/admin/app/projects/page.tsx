@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { AddFormPanel } from "../components/AddFormPanel";
-import { AdminAuthGuard } from "../components/AdminAuthGuard";
 import { ProjectForm, type ProjectFormValue } from "../components/ProjectForm";
 import { Sidebar } from "../components/Sidebar";
 import { apiFetch } from "@/lib/api";
@@ -85,8 +84,7 @@ export default function ProjectsPage() {
   };
 
   return (
-    <AdminAuthGuard>
-      <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
+    <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
       <Sidebar />
       <main className="min-w-0 flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -177,7 +175,6 @@ export default function ProjectsPage() {
           </section>
         </div>
       </main>
-      </div>
-    </AdminAuthGuard>
+    </div>
   );
 }

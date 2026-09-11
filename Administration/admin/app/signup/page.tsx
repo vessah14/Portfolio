@@ -1,5 +1,5 @@
-import { AdminSignup } from "../components/AdminSignup";
+import { redirect } from "next/navigation";
 
-export default function AdminSignupPage() {
-  return <AdminSignup />;
+export default function AdminSignupRedirect() {
+  redirect("/dashboard");
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminAuthGuard } from "../components/AdminAuthGuard";
 import { Sidebar } from "../components/Sidebar";
 import { apiFetch } from "@/lib/api";
 
@@ -53,8 +52,7 @@ export default function MessagesPage() {
   }, []);
 
   return (
-    <AdminAuthGuard>
-      <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
+    <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
       <Sidebar />
       <main className="min-w-0 flex-1">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -117,7 +115,6 @@ export default function MessagesPage() {
           </section>
         </div>
       </main>
-      </div>
-    </AdminAuthGuard>
+    </div>
   );
 }
