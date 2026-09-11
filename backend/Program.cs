@@ -21,6 +21,17 @@ var allowedOrigins = configuredOrigins
     .Where(origin => !string.IsNullOrWhiteSpace(origin) && origin != "*")
     .ToArray();
 
+if (builder.Environment.IsProduction())
+{
+    allowedOrigins = allowedOrigins
+        .Concat([
+            "https://frontend-wheat-two-hh3yzglt50.vercel.app",
+            "https://admin-amber-six-49.vercel.app"
+        ])
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
