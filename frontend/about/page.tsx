@@ -11,7 +11,6 @@ import { apiFetch } from "@/lib/api";
 
 type ApiProject = {
   categorieId: string;
-  create_at: string;
 };
 
 type ApiCategory = {
@@ -27,6 +26,8 @@ type StatItem = {
   value: string;
   label: string;
 };
+
+const YEARS_OF_EXPERIENCE = 2;
 
 const normalizeCategoryName = (value: string) => {
   const normalized = value.trim();
@@ -104,23 +105,11 @@ function About() {
           );
         }).length;
 
-        const validTimestamps = apiProjects
-          .map((project) => new Date(project.create_at).getTime())
-          .filter((timestamp) => !Number.isNaN(timestamp));
-
-        const yearsOfExperience = validTimestamps.length
-          ? Math.max(
-              0,
-              new Date().getFullYear() -
-                new Date(Math.min(...validTimestamps)).getFullYear(),
-            )
-          : 0;
-
         setStats([
           { value: `${apiProjects.length}`, label: t.about.completed },
           { value: `${creativeProjectsCount}`, label: t.about.creative },
           { value: `${apiCompetences.length}`, label: t.about.skills },
-          { value: `${yearsOfExperience}`, label: t.about.experience },
+          { value: `${YEARS_OF_EXPERIENCE}`, label: t.about.experience },
         ]);
         setStatsError(false);
       } catch {
