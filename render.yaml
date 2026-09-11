@@ -30,11 +30,11 @@ services:
       - key: Smtp__NotificationRecipient
         sync: false
       - key: Cors__AllowedOrigins__0
-        value: https://portfolio-qoz2-nchwzio6r-vessah14-1878s-projects.vercel.app
+        value: https://portfolio-qehavw5bz-vessah14-1878s-projects.vercel.app
       - key: Cors__AllowedOrigins__1
         value: http://localhost:3000
       - key: Cors__AllowedOrigins__2
-        value: https://admin-qoz2-nchwzio6r-vessah14-1878s-projects.vercel.app
+        value: https://admin-qehavw5bz-vessah14-1878s-projects.vercel.app
       - key: Cloudinary__CloudName
         sync: false
       - key: Cloudinary__ApiKey
