@@ -70,9 +70,11 @@ Les variables Vercel utilisées pour les deux projets sont :
 
 - Les projets, catégories, compétences, statistiques et messages sont lus depuis l'API.
 - Les créations de projets et de compétences utilisent les réponses persistées retournées par l'API, sans identifiant temporaire ni image par défaut.
-- L'inscription et la connexion utilisent `/api/User/register` et `/api/User/login`.
-- Le dashboard admin utilise le JWT reçu par l'API et vérifie `/health` pour afficher l'état réel du backend.
+- Le frontend public conserve ses routes d'inscription et de connexion si elles sont utilisées.
+- L'interface admin ouvre directement `/dashboard` : les routes `/` et `/signup` redirigent vers le dashboard et aucun formulaire de connexion ou d'inscription n'est affiché.
+- Les pages admin consomment directement les données de l'API et vérifient `/health` pour afficher l'état réel du backend.
 - Les données du dashboard (visites, notifications ou taux inventés) ne sont pas affichées tant qu'aucun endpoint de base de données ne les fournit.
+- Cette interface admin n'est plus une zone protégée côté navigateur ; réactivez un contrôle d'accès backend avant toute exposition publique.
 
 ## Configuration locale du backend
 
