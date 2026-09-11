@@ -17,10 +17,26 @@
 - `Jwt__Audience` : `MonApiUsers`
 - `Cloudinary__CloudName`, `Cloudinary__ApiKey`, `Cloudinary__ApiSecret` : identifiants Cloudinary
 - `Smtp__Host`, `Smtp__Port`, `Smtp__From`, `Smtp__User`, `Smtp__Password`, `Smtp__NotificationRecipient` : configuration SMTP
+- `AdminSeed__Enabled` : `true` pour créer le compte administrateur initial au démarrage
+- `AdminSeed__Nom` : `VNAtech`
+- `AdminSeed__Prenom` : `Administrateur`
+- `AdminSeed__Email` : `admin@vnatech.com`
+- `AdminSeed__Password` : mot de passe fort, défini comme secret Render et jamais commit
 - `Cors__AllowedOrigins__0` : `https://frontend-wheat-two-hh3yzglt50.vercel.app`
 - `Cors__AllowedOrigins__1` : `https://admin-amber-six-49.vercel.app`
 
 Le service Render utilise `backend/Dockerfile` et le fichier [render.yaml](./render.yaml). Le fichier local [backend/appsettings.json](./backend/appsettings.json) n'est pas modifié par le projet et reste ignoré par Git.
+
+### Compte administrateur initial
+
+Lorsque `AdminSeed__Enabled=true`, le backend crée au premier démarrage un compte dans la table PostgreSQL `Administrateur` avec les valeurs `AdminSeed__Nom`, `AdminSeed__Prenom`, `AdminSeed__Email` et `AdminSeed__Password`. Le mot de passe est haché avec BCrypt avant d'être enregistré.
+
+Le seed est idempotent : si l'adresse existe déjà, le mot de passe existant n'est jamais remplacé. Pour créer un nouveau compte initial, utilisez une nouvelle adresse ou créez le compte depuis l'interface d'inscription. Après avoir renseigné `AdminSeed__Password` dans Render, redémarrez le service backend afin d'exécuter le seed.
+
+Identifiants par défaut configurés dans `render.yaml` :
+
+- **Email** : `admin@vnatech.com`
+- **Mot de passe** : la valeur secrète définie dans `AdminSeed__Password` sur Render
 
 ### Vérification du backend
 

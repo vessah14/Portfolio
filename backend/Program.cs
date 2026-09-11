@@ -61,8 +61,15 @@ builder.Services.AddDbContext<PortfolioDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<CloudinaryService>();
+builder.Services.AddScoped<AdminSeedService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var adminSeedService = scope.ServiceProvider.GetRequiredService<AdminSeedService>();
+    await adminSeedService.EnsureAdminAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

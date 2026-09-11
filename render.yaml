@@ -13,7 +13,7 @@ services:
       - key: ConnectionStrings__DefaultConnection
         sync: false
       - key: Jwt__Key
-        sync: false
+        generateValue: true
       - key: Jwt__Issuer
         value: MonApi
       - key: Jwt__Audience
@@ -39,4 +39,14 @@ services:
       - key: Cloudinary__ApiKey
         sync: false
       - key: Cloudinary__ApiSecret
+        sync: false
+      - key: AdminSeed__Enabled
+        value: "true"
+      - key: AdminSeed__Nom
+        value: VNAtech
+      - key: AdminSeed__Prenom
+        value: Administrateur
+      - key: AdminSeed__Email
+        value: admin@vnatech.com
+      - key: AdminSeed__Password
         sync: false
