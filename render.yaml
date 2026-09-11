@@ -30,6 +30,6 @@ services:
       - key: Smtp__NotificationRecipient
         sync: false
       - key: Cors__AllowedOrigins__0
-        value: https://portfolio-avtt-lqcw3odmr-vessah14-1878s-projects.vercel.app
+        value: https://portfolio-udrb-git-main-vessah14-1878s-projects.vercel.app
       - key: Cors__AllowedOrigins__1
         value: http://localhost:3000
