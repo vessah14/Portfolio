@@ -6,6 +6,7 @@ services:
     region: oregon
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
+    healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
@@ -30,9 +31,7 @@ services:
       - key: Smtp__NotificationRecipient
         sync: false
       - key: Cors__AllowedOrigins__0
-        value: *
-      - key: Cors__AllowedOrigins__1
-        value: http://localhost:3000
+        value: "*"
       - key: Cloudinary__CloudName
         sync: false
       - key: Cloudinary__ApiKey

@@ -3,95 +3,49 @@
 ## Architecture du projet
 
 - **Frontend** : Next.js 16.3.4 avec React 19 et TypeScript
+- **Administration** : Next.js 16.3.4 avec React 19 et TypeScript
 - **Backend** : .NET 10.0 ASP.NET Core Web API avec PostgreSQL
 
 ## Déploiement du backend sur Render
 
-### Prérequis
+### Variables obligatoires sur Render
 
-- Compte Render (https://render.com)
-- Base de données PostgreSQL (Supabase ou Render PostgreSQL)
-- Repository GitHub avec le code du backend
+- `ASPNETCORE_ENVIRONMENT` : `Production`
+- `ConnectionStrings__DefaultConnection` : chaîne PostgreSQL complète
+- `Jwt__Key` : clé secrète JWT longue et aléatoire
+- `Jwt__Issuer` : `MonApi`
+- `Jwt__Audience` : `MonApiUsers`
+- `Cloudinary__CloudName`, `Cloudinary__ApiKey`, `Cloudinary__ApiSecret` : identifiants Cloudinary
+- `Smtp__Host`, `Smtp__Port`, `Smtp__From`, `Smtp__User`, `Smtp__Password`, `Smtp__NotificationRecipient` : configuration SMTP
+- `Cors__AllowedOrigins__0` : origine publique du frontend, par exemple `https://mon-portfolio.example`
 
-### Étapes
+Le service Render utilise `backend/Dockerfile` et le fichier [render.yaml](./render.yaml). Le fichier local [backend/appsettings.json](./backend/appsettings.json) n'est pas modifié par le projet et reste ignoré par Git.
 
-1. **Déploiement manuel sur Render** :
-   - Allez sur Render → New Web Service
-   - Sélectionnez « Docker » comme environnement
-   - Connectez votre repository GitHub
-   - **Root Directory** : `backend`
-   - **Dockerfile Path** : `Dockerfile`
-   - **Docker Build Context Directory** : (vide)
-   - Sélectionnez le plan Free
-   - Cliquez sur « Create Web Service »
+### Vérification du backend
 
-2. **Configurer les variables d'environnement sur Render** :
-   - `ConnectionStrings__DefaultConnection` : votre chaîne de connexion PostgreSQL
-   - `Jwt__Key` : clé secrète pour JWT (générez une clé sécurisée)
-   - `Jwt__Issuer` : `MonApi`
-   - `Jwt__Audience` : `MonApiUsers`
-   - `Smtp__Host` : serveur SMTP pour les emails
-   - `Smtp__Port` : port SMTP (ex. 587)
-   - `Smtp__From` : email d'envoi
-   - `Smtp__User` : utilisateur SMTP
-   - `Smtp__Password` : mot de passe SMTP
-   - `Smtp__NotificationRecipient` : email de réception des notifications
-   - `Cors__AllowedOrigins__0` : URL publique du frontend après son déploiement
-   - `Cors__AllowedOrigins__1` : URL secondaire si nécessaire
+- **API actuelle** : `https://portfolio-1-ypt3.onrender.com`
+- **Contrôle santé après redeploiement** : `https://portfolio-1-ypt3.onrender.com/health`
+- **Swagger en développement** : `https://portfolio-1-ypt3.onrender.com/swagger`
 
-### Backend déployé
+La route `/health` vérifie réellement que l'API peut se connecter à PostgreSQL et renvoie `503` si la base est indisponible.
 
-- **URL actuelle** : `https://portfolio-1-ypt3.onrender.com`
-- **Swagger** : `https://portfolio-1-ypt3.onrender.com/swagger`
+## Déploiement des frontends
 
-## Déploiement du frontend
-
-Le frontend Next.js peut être déployé sur n'importe quel hébergeur compatible avec Next.js. Configurez au minimum les variables suivantes dans l'environnement de l'hébergeur choisi :
+Le frontend public et l'administration peuvent être déployés sur n'importe quel hébergeur compatible avec Next.js. Configurez ces variables au moment du build :
 
 - `NEXT_PUBLIC_API_URL` : `https://portfolio-1-ypt3.onrender.com/api`
-- `NEXT_PUBLIC_SITE_URL` : URL publique du frontend, utilisée par les métadonnées, le sitemap et les robots
+- `NEXT_PUBLIC_SITE_URL` : URL publique du frontend public, utilisée pour les métadonnées, le sitemap et les robots
 
-Après le déploiement, renseignez l'URL publique du frontend dans `Cors__AllowedOrigins__0` sur Render.
+Si `NEXT_PUBLIC_API_URL` est absent, les deux applications utilisent l'URL Render du projet comme valeur de secours. Aucun projet, compétence, statistique, message ou compte ne repose sur des données locales simulées.
 
-## Configuration Cloudinary
+## Données et authentification
 
-Si vous utilisez Cloudinary pour l'upload d'images, ajoutez ces variables d'environnement sur Render :
+- Les projets, catégories, compétences, statistiques et messages sont lus depuis l'API.
+- Les créations de projets et de compétences utilisent les réponses persistées retournées par l'API, sans identifiant temporaire ni image par défaut.
+- L'inscription et la connexion utilisent `/api/User/register` et `/api/User/login`.
+- Le dashboard admin utilise le JWT reçu par l'API et vérifie `/health` pour afficher l'état réel du backend.
+- Les données du dashboard (visites, notifications ou taux inventés) ne sont pas affichées tant qu'aucun endpoint de base de données ne les fournit.
 
-- `Cloudinary__CloudName` : votre cloud name Cloudinary
-- `Cloudinary__ApiKey` : votre API key Cloudinary
-- `Cloudinary__ApiSecret` : votre API secret Cloudinary
+## Configuration locale du backend
 
-## Sécurité
-
-- **Ne jamais committer** `appsettings.json` avec de vraies credentials
-- Utilisez `appsettings.Example.json` comme template
-- Générez des clés JWT fortes et uniques
-- Utilisez les secrets de l'hébergeur pour les credentials sensibles
-
-## Structure des fichiers de déploiement
-
-- `backend/Dockerfile` : configuration Docker pour le backend
-- `render.yaml` : configuration Render pour le déploiement à la racine
-- `backend/.dockerignore` : fichiers à exclure du build Docker
-- `frontend/app/sitemap.ts` : génération du sitemap avec l'URL publique configurée
-- `frontend/app/robots.ts` : génération des règles robots avec l'URL publique configurée
-
-## Modifications effectuées
-
-### Frontend
-
-- Utilisation de `NEXT_PUBLIC_API_URL` avec l'API Render comme valeur par défaut dans les composants frontend et d'administration
-- Utilisation de `NEXT_PUBLIC_SITE_URL` pour les métadonnées, le sitemap et les robots
-- Suppression des fichiers de configuration et des assets de plateforme inutilisés
-
-### Backend
-
-- Création de `backend/Dockerfile` pour le conteneur Docker
-- Création de `render.yaml` à la racine pour le déploiement Render
-- Création de `backend/.dockerignore` pour exclure les fichiers inutiles
-
-## Test du déploiement
-
-1. Testez l'API backend via Swagger : `https://portfolio-1-ypt3.onrender.com/swagger`
-2. Testez le frontend via son URL publique configurée dans `NEXT_PUBLIC_SITE_URL`
-3. Vérifiez les logs sur Render et sur l'hébergeur frontend en cas d'erreur
+Ne modifiez pas les secrets locaux. Pour une nouvelle installation, copiez [backend/appsettings.Example.json](./backend/appsettings.Example.json) vers `backend/appsettings.json`, puis renseignez vos propres valeurs. Le fichier réel existant doit rester inchangé et ne doit jamais être commit.

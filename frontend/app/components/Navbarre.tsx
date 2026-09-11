@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../i18n/LanguageProvider";
@@ -73,9 +74,9 @@ export default function Navbarre() {
       }`}
     >
       <div className="container mx-auto flex items-center justify-between gap-3">
-        <a href="/#home" className="text-2xl font-bold text-white" aria-label="Accueil">
+        <Link href="/#home" className="text-2xl font-bold text-white" aria-label="Accueil">
           VNA<span className="text-red-500 italic">tech</span>
-        </a>
+        </Link>
 
         <div className="hidden space-x-4 md:flex">
           {links.map((link) => (

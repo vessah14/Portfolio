@@ -5,10 +5,21 @@ using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var allowedOrigins = builder.Configuration
+var configuredOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
-    .Get<string[]>() ??
-    ["http://localhost:3000", "http://localhost:3001"];
+    .Get<string[]>() ?? [];
+
+if (configuredOrigins.Length == 0)
+{
+    configuredOrigins = builder.Environment.IsProduction()
+        ? ["*"]
+        : ["http://localhost:3000", "http://localhost:3001"];
+}
+
+var allowAnyOrigin = configuredOrigins.Any(origin => origin == "*");
+var allowedOrigins = configuredOrigins
+    .Where(origin => !string.IsNullOrWhiteSpace(origin) && origin != "*")
+    .ToArray();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -20,9 +31,18 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        if (allowAnyOrigin)
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
     });
 });
 builder.Services.AddSingleton<EmailService>();
@@ -42,6 +62,27 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("FrontendPolicy");
+
+app.MapGet("/health", async (PortfolioDbContext db, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var isDatabaseAvailable = await db.Database.CanConnectAsync(cancellationToken);
+
+        return isDatabaseAvailable
+            ? Results.Ok(new { status = "ok", database = "connected" })
+            : Results.Json(
+                new { status = "error", database = "unavailable" },
+                statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+    catch
+    {
+        return Results.Json(
+            new { status = "error", database = "unavailable" },
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
+
 app.MapControllers();
 
 app.Run();

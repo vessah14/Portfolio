@@ -3,12 +3,26 @@
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
-function subscribe() {
-  return () => {};
+import {
+  ADMIN_AUTH_EVENT,
+  clearAdminToken,
+  getAdminToken,
+  isAdminTokenValid,
+} from "@/lib/auth";
+
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener(ADMIN_AUTH_EVENT, onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+
+  return () => {
+    window.removeEventListener(ADMIN_AUTH_EVENT, onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
 }
 
 function getAuthSnapshot() {
-  return localStorage.getItem("vnatech-admin-auth") === "true";
+  const token = getAdminToken();
+  return Boolean(token && isAdminTokenValid(token));
 }
 
 function getServerSnapshot() {
@@ -24,6 +38,12 @@ export function AdminAuthGuard({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    const token = getAdminToken();
+
+    if (token && !isAdminTokenValid(token)) {
+      clearAdminToken();
+    }
+
     if (!isAuthenticated) {
       router.replace("/");
     }

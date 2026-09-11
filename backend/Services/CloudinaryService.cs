@@ -5,26 +5,12 @@ namespace backend.Services
 {
     public class CloudinaryService
     {
-        private readonly Cloudinary _cloudinary;
+        private readonly IConfiguration _configuration;
+        private Cloudinary? _cloudinary;
 
         public CloudinaryService(IConfiguration configuration)
         {
-            var cloudName = configuration["Cloudinary:CloudName"];
-            var apiKey = configuration["Cloudinary:ApiKey"];
-            var apiSecret = configuration["Cloudinary:ApiSecret"];
-
-            if (string.IsNullOrWhiteSpace(cloudName) ||
-                string.IsNullOrWhiteSpace(apiKey) ||
-                string.IsNullOrWhiteSpace(apiSecret))
-            {
-                throw new InvalidOperationException("Les paramètres Cloudinary (CloudName, ApiKey, ApiSecret) ne sont pas configurés.");
-            }
-
-            var account = new Account(cloudName, apiKey, apiSecret);
-            _cloudinary = new Cloudinary(account)
-            {
-                Api = { Secure = true }
-            };
+            _configuration = configuration;
         }
 
         public async Task<string> UploadImageAsync(IFormFile file, string folder = "portfolio")
@@ -53,14 +39,43 @@ namespace backend.Services
                 Overwrite = false
             };
 
-            var result = await _cloudinary.UploadAsync(uploadParams);
+            var result = await GetClient().UploadAsync(uploadParams);
 
             if (result.Error != null)
             {
                 throw new InvalidOperationException(result.Error.Message);
             }
 
-            return result.SecureUrl?.ToString() ?? throw new InvalidOperationException("L’URL Cloudinary est introuvable.");
+            return result.SecureUrl?.ToString()
+                ?? throw new InvalidOperationException("L’URL Cloudinary est introuvable.");
+        }
+
+        private Cloudinary GetClient()
+        {
+            if (_cloudinary is not null)
+            {
+                return _cloudinary;
+            }
+
+            var cloudName = _configuration["Cloudinary:CloudName"];
+            var apiKey = _configuration["Cloudinary:ApiKey"];
+            var apiSecret = _configuration["Cloudinary:ApiSecret"];
+
+            if (string.IsNullOrWhiteSpace(cloudName) ||
+                string.IsNullOrWhiteSpace(apiKey) ||
+                string.IsNullOrWhiteSpace(apiSecret))
+            {
+                throw new InvalidOperationException(
+                    "Les paramètres Cloudinary (CloudName, ApiKey, ApiSecret) sont requis pour envoyer une image.");
+            }
+
+            var account = new Account(cloudName, apiKey, apiSecret);
+            _cloudinary = new Cloudinary(account)
+            {
+                Api = { Secure = true }
+            };
+
+            return _cloudinary;
         }
     }
 }

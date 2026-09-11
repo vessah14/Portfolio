@@ -18,12 +18,13 @@ export function ProjectCard({ project }: { project: Project }) {
 
   return (
     <>
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors">
+      <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 transition-colors hover:border-gray-700">
         <button
           type="button"
           onClick={() => hasImage && setIsModalOpen(true)}
-          className="relative h-48 w-full overflow-hidden block"
+          className="relative block h-48 w-full overflow-hidden"
           aria-label={`${t.projects.viewImage} ${project.title}`}
+          disabled={!hasImage}
         >
           {hasImage ? (
             <Image
@@ -38,43 +39,47 @@ export function ProjectCard({ project }: { project: Project }) {
               {t.projects.noImage}
             </div>
           )}
-          <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-sky-400 text-xs font-medium px-3 py-1 rounded-full">
-            {project.category}
-          </span>
+          {project.category && (
+            <span className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-sky-400 backdrop-blur-sm">
+              {project.category}
+            </span>
+          )}
         </button>
 
         <div className="p-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-white font-bold">{project.title}</h3>
-            <span className="text-gray-500 text-sm">{project.year}</span>
+            <h3 className="font-bold text-white">{project.title}</h3>
+            {project.year && <span className="text-sm text-gray-500">{project.year}</span>}
           </div>
 
-          <p className="mt-2 text-gray-400 text-sm leading-relaxed">
+          <p className="mt-2 text-sm leading-relaxed text-gray-400">
             {project.description}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {visibleTags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-md"
-              >
-                {tag}
-              </span>
-            ))}
-            {remaining > 0 && (
-              <span className="text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-md">
-                +{remaining}
-              </span>
-            )}
-          </div>
+          {visibleTags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {visibleTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-md bg-gray-800 px-2.5 py-1 text-xs text-gray-300"
+                >
+                  {tag}
+                </span>
+              ))}
+              {remaining > 0 && (
+                <span className="rounded-md bg-gray-800 px-2.5 py-1 text-xs text-gray-300">
+                  +{remaining}
+                </span>
+              )}
+            </div>
+          )}
 
           {hasProjectLink ? (
             <a
               href={project.lien}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1 text-red-500 hover:text-red-400 text-sm font-medium"
+              className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-400"
             >
               {t.projects.viewSite} →
             </a>
@@ -82,7 +87,7 @@ export function ProjectCard({ project }: { project: Project }) {
             <button
               type="button"
               onClick={() => hasImage && setIsModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-1 text-red-500 hover:text-red-400 text-sm font-medium"
+              className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!hasImage}
             >
               {isDesignGraphic ? t.projects.viewDetail : t.projects.viewDetails} →

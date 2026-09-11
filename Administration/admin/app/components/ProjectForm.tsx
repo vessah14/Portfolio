@@ -3,18 +3,29 @@
 import Image from "next/image";
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
+import { apiFetch } from "@/lib/api";
+
 export type ProjectFormValue = {
-  id?: string;
+  id: string;
   title: string;
   category: string;
-  image: string | null;
-  description?: string;
-  lien?: string;
+  image: string;
+  description: string;
+  lien: string;
 };
 
 type CategoryOption = {
   id: string;
   nom: string;
+};
+
+type CreatedProject = {
+  id: string;
+  titre: string;
+  description: string;
+  photo_Url: string;
+  categorieId: string;
+  lien: string;
 };
 
 const normalizeCategoryName = (value: string) => {
@@ -40,8 +51,6 @@ const normalizeCategoryName = (value: string) => {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
-
 export function ProjectForm({
   onSaved,
 }: {
@@ -56,13 +65,12 @@ export function ProjectForm({
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/Categories`);
+        const data = await apiFetch<CategoryOption[]>("Categories");
 
-        if (!response.ok) {
-          throw new Error("Impossible de récupérer les catégories.");
+        if (!Array.isArray(data)) {
+          throw new Error("La réponse API des catégories est invalide.");
         }
 
-        const data: CategoryOption[] = await response.json();
         setCategories(
           data.map((category) => ({
             ...category,
@@ -115,47 +123,33 @@ export function ProjectForm({
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Projet`, {
+      const createdProject = await apiFetch<CreatedProject>("Projet", {
         method: "POST",
         body: formData,
       });
+      const categoryName = categories.find(
+        (category) => category.id === createdProject.categorieId,
+      )?.nom;
 
-      if (!response.ok) {
-        throw new Error("Le projet n'a pas pu être enregistré.");
+      if (
+        !createdProject.id ||
+        !createdProject.titre ||
+        !createdProject.description ||
+        !createdProject.photo_Url ||
+        !createdProject.lien ||
+        !categoryName
+      ) {
+        throw new Error("La réponse du serveur est incomplète.");
       }
 
-      const createdProject = await response.json();
-      const categoryName =
-        categories.find(
-          (category) => category.id === createdProject.categorieId,
-        )?.nom ?? "Autre";
-
-      const normalizedProject = {
-        id:
-          createdProject.id ??
-          createdProject.Id ??
-          `temp-${Date.now()}`,
-        title:
-          String(
-            createdProject.titre ?? createdProject.title ?? "Nouveau projet",
-          ),
+      onSaved?.({
+        id: createdProject.id,
+        title: createdProject.titre,
         category: categoryName,
-        image:
-          createdProject.photo_Url ||
-          createdProject.photoUrl ||
-          imagePreview ||
-          "/projects/default.png",
-        description: String(
-          createdProject.description ??
-            createdProject.Description ??
-            "",
-        ),
-        lien: String(
-          createdProject.lien ?? createdProject.Lien ?? "",
-        ),
-      };
-
-      onSaved?.(normalizedProject);
+        image: createdProject.photo_Url,
+        description: createdProject.description,
+        lien: createdProject.lien,
+      });
 
       setSubmitMessage("Projet enregistré avec succès.");
       event.currentTarget.reset();
@@ -182,9 +176,6 @@ export function ProjectForm({
     <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Ajouter un projet</h2>
-        <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
-          Nouveau
-        </span>
       </div>
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         <label className="block">
@@ -193,7 +184,6 @@ export function ProjectForm({
             name="titre"
             type="text"
             required
-            placeholder="Nom du projet"
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>
@@ -202,6 +192,7 @@ export function ProjectForm({
           <select
             name="CategorieId"
             required
+            defaultValue=""
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Sélectionner une catégorie</option>
@@ -218,7 +209,6 @@ export function ProjectForm({
             name="Lien"
             type="url"
             required
-            placeholder="https://example.com"
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>
@@ -228,7 +218,6 @@ export function ProjectForm({
             name="Description"
             rows={4}
             required
-            placeholder="Décrivez le projet..."
             className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>
@@ -282,11 +271,11 @@ export function ProjectForm({
           )}
         </div>
         {submitMessage && (
-          <p className="md:col-span-2 text-sm text-emerald-300">
+          <p className="text-sm text-emerald-300 md:col-span-2">
             {submitMessage}
           </p>
         )}
-        <div className="md:col-span-2 flex justify-end">
+        <div className="flex justify-end md:col-span-2">
           <button
             type="submit"
             disabled={isSubmitting}

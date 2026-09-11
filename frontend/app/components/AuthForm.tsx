@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { apiFetch } from "@/lib/api";
+
 type AuthMode = "login" | "signup";
 
-type StoredUser = {
-  name: string;
-  email: string;
-  password: string;
+type LoginResponse = {
+  token?: string;
+  Token?: string;
 };
-
-const storageKey = "vnatech-user";
 
 export default function AuthForm({ mode }: { mode: AuthMode }) {
   const isSignup = mode === "signup";
   const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -23,53 +23,71 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
     type: "error" | "success";
     message: string;
   } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedback(null);
 
-    if (isSignup) {
-      if (password !== confirmation) {
-        setFeedback({
-          type: "error",
-          message: "Les mots de passe ne correspondent pas.",
+    if (isSignup && password !== confirmation) {
+      setFeedback({
+        type: "error",
+        message: "Les mots de passe ne correspondent pas.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      if (isSignup) {
+        await apiFetch("User/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Nom: name,
+            Prenom: firstName,
+            Email: email,
+            Password: password,
+          }),
         });
+        setFeedback({
+          type: "success",
+          message: "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+        });
+        setPassword("");
+        setConfirmation("");
         return;
       }
 
-      const user: StoredUser = { name, email, password };
-      localStorage.setItem(storageKey, JSON.stringify(user));
+      await apiFetch<LoginResponse>("User/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ Email: email, Password: password }),
+      });
       setFeedback({
         type: "success",
-        message: "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+        message: "Connexion réussie.",
       });
-      setPassword("");
-      setConfirmation("");
-      return;
-    }
-
-    const storedUser = localStorage.getItem(storageKey);
-    const user = storedUser ? (JSON.parse(storedUser) as StoredUser) : null;
-
-    if (!user || user.email !== email || user.password !== password) {
+    } catch {
       setFeedback({
         type: "error",
-        message: "Email ou mot de passe incorrect.",
+        message: "L'API n'a pas pu traiter votre demande.",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setFeedback({
-      type: "success",
-      message: `Bienvenue ${user.name} ! Connexion réussie.`,
-    });
   }
 
   return (
     <main className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-gray-950 px-6 py-16">
       <section className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-900 p-8 shadow-2xl shadow-black/30">
         <div className="mb-8">
-          <p className="text-sm font-mono uppercase tracking-[0.2em] text-red-500">
+          <p className="font-mono text-sm uppercase tracking-[0.2em] text-red-500">
             VNAtech
           </p>
           <h1 className="mt-3 text-3xl font-extrabold text-white">
@@ -84,17 +102,30 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {isSignup && (
-            <label className="block">
-              <span className="mb-2 block text-sm text-gray-300">Nom complet</span>
-              <input
-                required
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Jean Dupont"
-                className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-red-500"
-              />
-            </label>
+            <>
+              <label className="block">
+                <span className="mb-2 block text-sm text-gray-300">Nom</span>
+                <input
+                  required
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="family-name"
+                  className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-red-500"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm text-gray-300">Prénom</span>
+                <input
+                  required
+                  type="text"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  autoComplete="given-name"
+                  className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-red-500"
+                />
+              </label>
+            </>
           )}
 
           <label className="block">
@@ -104,7 +135,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="jean@exemple.com"
+              autoComplete="email"
               className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-red-500"
             />
           </label>
@@ -117,7 +148,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="6 caractères minimum"
+              autoComplete={isSignup ? "new-password" : "current-password"}
               className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-red-500"
             />
           </label>
@@ -133,7 +164,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
                 type="password"
                 value={confirmation}
                 onChange={(event) => setConfirmation(event.target.value)}
-                placeholder="Répétez votre mot de passe"
+                autoComplete="new-password"
                 className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-red-500"
               />
             </label>
@@ -141,7 +172,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
 
           {feedback && (
             <p
-              role="status"
+              role={feedback.type === "error" ? "alert" : "status"}
               className={`rounded-xl border px-4 py-3 text-sm ${
                 feedback.type === "success"
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
@@ -154,9 +185,14 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-red-500 py-3.5 font-semibold text-white transition-colors hover:bg-red-600"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-red-500 py-3.5 font-semibold text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSignup ? "Créer mon compte" : "Se connecter"}
+            {isSubmitting
+              ? "Traitement..."
+              : isSignup
+                ? "Créer mon compte"
+                : "Se connecter"}
           </button>
         </form>
 

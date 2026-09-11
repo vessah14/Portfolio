@@ -2,34 +2,48 @@
 
 import { useEffect, useState } from "react";
 
+import { AdminAuthGuard } from "../components/AdminAuthGuard";
 import { Sidebar } from "../components/Sidebar";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
+import { apiFetch } from "@/lib/api";
 
 type ApiMessage = {
   id: string;
   nom_envoyeur: string;
   email_envoyeur: string;
   message: string;
+  create_at: string;
 };
+
+function formatDate(value: string) {
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? ""
+    : new Intl.DateTimeFormat("fr-FR", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(date);
+}
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<ApiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/Message`);
+        const data = await apiFetch<ApiMessage[]>("Message");
 
-        if (!response.ok) {
-          throw new Error("Impossible de récupérer les messages.");
+        if (!Array.isArray(data)) {
+          throw new Error("La réponse API des messages est invalide.");
         }
 
-        const data: ApiMessage[] = await response.json();
         setMessages(data);
+        setHasError(false);
       } catch {
         setMessages([]);
+        setHasError(true);
       } finally {
         setIsLoading(false);
       }
@@ -39,7 +53,8 @@ export default function MessagesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
+    <AdminAuthGuard>
+      <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
       <Sidebar />
       <main className="min-w-0 flex-1">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -56,13 +71,18 @@ export default function MessagesPage() {
           </div>
 
           <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-            {isLoading ? (
-              <p className="text-slate-400">Chargement des messages...</p>
-            ) : messages.length === 0 ? (
+            {isLoading && <p className="text-slate-400">Chargement des messages...</p>}
+            {hasError && (
+              <p className="text-amber-300">
+                Les messages sont indisponibles depuis l&apos;API.
+              </p>
+            )}
+            {!isLoading && !hasError && messages.length === 0 && (
               <p className="text-slate-400">
                 Aucun message reçu pour le moment.
               </p>
-            ) : (
+            )}
+            {!isLoading && !hasError && messages.length > 0 && (
               <div className="space-y-3">
                 {messages.map((message) => (
                   <article
@@ -80,6 +100,9 @@ export default function MessagesPage() {
                         <p className="text-sm text-slate-400">
                           {message.email_envoyeur}
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {formatDate(message.create_at)}
+                        </p>
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 text-sm text-slate-300 sm:items-end">
@@ -94,6 +117,7 @@ export default function MessagesPage() {
           </section>
         </div>
       </main>
-    </div>
+      </div>
+    </AdminAuthGuard>
   );
 }

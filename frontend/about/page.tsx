@@ -7,16 +7,10 @@ import { ContactSection } from "./components/ContactSection";
 import { RealisationsSection } from "./components/RealisationsSection";
 import { SkillsSection } from "./components/SkillsSection";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
+import { apiFetch } from "@/lib/api";
 
 type ApiProject = {
-  id: string;
-  titre: string;
-  description: string;
-  photo_Url: string;
   categorieId: string;
-  lien: string;
   create_at: string;
 };
 
@@ -26,23 +20,13 @@ type ApiCategory = {
 };
 
 type ApiCompetence = {
-  id: number;
-  nom: string;
-  progression: number;
-  create_at: string;
+  id: string;
 };
 
 type StatItem = {
   value: string;
   label: string;
 };
-
-const defaultStats: StatItem[] = [
-  { value: "0+", label: "Projets réalisés" },
-  { value: "0+", label: "Projets créatifs" },
-  { value: "0", label: "Domaines de compétence" },
-  { value: "1+", label: "Années d'expérience" },
-];
 
 const normalizeCategoryName = (value: string) => {
   const normalized = value.trim();
@@ -69,7 +53,7 @@ const normalizeCategoryName = (value: string) => {
 
 export default function Container() {
   return (
-    <section id="about" className="text-white py-20 bg-black scroll-mt-20">
+    <section id="about" className="scroll-mt-20 bg-black py-20 text-white">
       <About />
     </section>
   );
@@ -83,41 +67,26 @@ function About() {
     t.about.skills,
     t.about.experience,
   ];
-  const [stats, setStats] = useState<StatItem[]>(defaultStats);
+  const [stats, setStats] = useState<StatItem[] | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState(false);
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [projectsResponse, categoriesResponse, competencesResponse] =
-          await Promise.all([
-            fetch(`${API_BASE_URL}/Projet`),
-            fetch(`${API_BASE_URL}/Categories`),
-            fetch(`${API_BASE_URL}/Competences`),
-          ]);
+        const [apiProjects, apiCategories, apiCompetences] = await Promise.all([
+          apiFetch<ApiProject[]>("Projet"),
+          apiFetch<ApiCategory[]>("Categories"),
+          apiFetch<ApiCompetence[]>("Competences"),
+        ]);
 
         if (
-          !projectsResponse.ok ||
-          !categoriesResponse.ok ||
-          !competencesResponse.ok
+          !Array.isArray(apiProjects) ||
+          !Array.isArray(apiCategories) ||
+          !Array.isArray(apiCompetences)
         ) {
-          throw new Error("Impossible de récupérer les statistiques.");
+          throw new Error("La réponse API des statistiques est invalide.");
         }
-
-        const projectsPayload = (await projectsResponse.json()) as ApiProject[];
-        const categoriesPayload =
-          (await categoriesResponse.json()) as ApiCategory[];
-        const competencesPayload =
-          (await competencesResponse.json()) as ApiCompetence[];
-
-        const apiProjects = Array.isArray(projectsPayload)
-          ? projectsPayload
-          : [];
-        const apiCategories = Array.isArray(categoriesPayload)
-          ? categoriesPayload
-          : [];
-        const apiCompetences = Array.isArray(competencesPayload)
-          ? competencesPayload
-          : [];
 
         const categoryNames = new Map(
           apiCategories.map((category) => [
@@ -139,46 +108,39 @@ function About() {
           .map((project) => new Date(project.create_at).getTime())
           .filter((timestamp) => !Number.isNaN(timestamp));
 
-        const yearsOfExperience =
-          validTimestamps.length > 0
-            ? Math.max(
-                1,
-                new Date().getFullYear() -
-                  new Date(Math.min(...validTimestamps)).getFullYear() +
-                  1,
-              )
-            : 1;
+        const yearsOfExperience = validTimestamps.length
+          ? Math.max(
+              0,
+              new Date().getFullYear() -
+                new Date(Math.min(...validTimestamps)).getFullYear(),
+            )
+          : 0;
 
         setStats([
-          { value: `${apiProjects.length}+`, label: "Projets réalisés" },
-          {
-            value: `${creativeProjectsCount}+`,
-            label: "Projets créatifs",
-          },
-          {
-            value: `${apiCompetences.length}`,
-            label: "Domaines de compétence",
-          },
-          {
-            value: `${yearsOfExperience}+`,
-            label: "Années d'expérience",
-          },
+          { value: `${apiProjects.length}`, label: t.about.completed },
+          { value: `${creativeProjectsCount}`, label: t.about.creative },
+          { value: `${apiCompetences.length}`, label: t.about.skills },
+          { value: `${yearsOfExperience}`, label: t.about.experience },
         ]);
+        setStatsError(false);
       } catch {
-        setStats(defaultStats);
+        setStats(null);
+        setStatsError(true);
+      } finally {
+        setIsLoadingStats(false);
       }
     };
 
     loadStats();
-  }, []);
+  }, [t.about.completed, t.about.creative, t.about.experience, t.about.skills]);
 
   return (
     <>
       <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-8 h-0.5 bg-red-500" />
-            <span className="text-red-500 text-sm font-mono">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="h-0.5 w-8 bg-red-500" />
+            <span className="font-mono text-sm text-red-500">
               {t.about.eyebrow}
             </span>
           </div>
@@ -186,9 +148,11 @@ function About() {
 
         <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }} className="relative mx-auto w-full max-w-105">
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="relative mx-auto w-full max-w-105"
+          >
             <div className="absolute inset-6 rounded-full bg-red-500/10 blur-3xl" />
 
             <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-950 p-3 shadow-[0_30px_80px_rgba(239,68,68,0.2)]">
@@ -210,36 +174,24 @@ function About() {
 
           <div className="space-y-6">
             <h2 className="text-4xl font-extrabold leading-tight md:text-5xl">
-              {t.about.title}{" "}
-              <span className="text-red-500">{t.about.highlight}</span>
+              {t.about.title} <span className="text-red-500">{t.about.highlight}</span>
             </h2>
 
-            <div className="space-y-4 text-lg text-gray-400 leading-relaxed">
+            <div className="space-y-4 text-lg leading-relaxed text-gray-400">
               <p>{t.about.first}</p>
               <p>{t.about.second}</p>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-2">
-              {[
-                "Reactjs",
-                "Nextjs",
-                "HTML/CSS",
-                "Tailwindcss",
-                "Javascript & Typescript",
-                "Asp.Net Core",
-                "Adobe Photoshop & Illustrator",
-              ].map((skill) => (
-                <span
-                  key={skill}
-                  className="rounded-full border border-gray-700 bg-gray-900/80 px-3 py-2 text-sm text-white"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-
             <div className="grid gap-4 pt-2 sm:grid-cols-2">
-              {stats.map((stat, index) => (
+              {isLoadingStats && (
+                <p className="text-sm text-gray-400">Chargement des statistiques...</p>
+              )}
+              {statsError && (
+                <p className="text-sm text-amber-300">
+                  Les statistiques sont indisponibles actuellement.
+                </p>
+              )}
+              {stats?.map((stat, index) => (
                 <div
                   key={stat.label}
                   className="rounded-2xl border border-gray-700 bg-white/5 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
@@ -259,16 +211,16 @@ function About() {
 
       <div className="mt-20 space-y-6 bg-gray-950 py-20">
         <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-8 h-0.5 bg-red-500" />
-            <span className="text-red-500 text-sm font-mono">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="h-0.5 w-8 bg-red-500" />
+            <span className="font-mono text-sm text-red-500">
               {t.about.skillsEyebrow}
             </span>
           </div>
           <h2 className="text-4xl font-extrabold leading-tight md:text-5xl">
             {t.about.skillsTitle}
           </h2>
-          <p className="space-y-4 text-lg text-gray-300 leading-relaxed">
+          <p className="space-y-4 text-lg leading-relaxed text-gray-300">
             {t.about.skillsDescription}
           </p>
           <div>

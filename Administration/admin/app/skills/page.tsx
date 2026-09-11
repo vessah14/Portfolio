@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 
 import { AddFormPanel } from "../components/AddFormPanel";
+import { AdminAuthGuard } from "../components/AdminAuthGuard";
 import { Sidebar } from "../components/Sidebar";
 import { SkillForm, type SkillFormValue } from "../components/SkillForm";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
+import { apiFetch } from "@/lib/api";
 
 type ApiSkill = {
   id: string;
   nom: string;
+  niveau: string;
   progression: number;
   create_at: string;
 };
@@ -18,20 +19,22 @@ type ApiSkill = {
 export default function SkillsPage() {
   const [skills, setSkills] = useState<ApiSkill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const loadSkills = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/Competences`);
+        const data = await apiFetch<ApiSkill[]>("Competences");
 
-        if (!response.ok) {
-          throw new Error("Impossible de récupérer les compétences.");
+        if (!Array.isArray(data)) {
+          throw new Error("La réponse API des compétences est invalide.");
         }
 
-        const data: ApiSkill[] = await response.json();
         setSkills(data);
+        setHasError(false);
       } catch {
         setSkills([]);
+        setHasError(true);
       } finally {
         setIsLoading(false);
       }
@@ -43,17 +46,19 @@ export default function SkillsPage() {
   const handleSavedSkill = (skill: SkillFormValue) => {
     setSkills((current) => [
       {
-        id: String(skill.id ?? Date.now()),
+        id: skill.id,
         nom: skill.name,
-        progression: Number(skill.progress || 0),
-        create_at: new Date().toISOString(),
+        niveau: skill.level,
+        progression: Number(skill.progress),
+        create_at: skill.create_at,
       },
       ...current,
     ]);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
+    <AdminAuthGuard>
+      <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
       <Sidebar />
       <main className="min-w-0 flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -81,13 +86,18 @@ export default function SkillsPage() {
               <span className="text-sm text-slate-400">{skills.length}</span>
             </div>
 
-            {isLoading ? (
-              <p className="text-slate-400">Chargement des compétences...</p>
-            ) : skills.length === 0 ? (
+            {isLoading && <p className="text-slate-400">Chargement des compétences...</p>}
+            {hasError && (
+              <p className="text-amber-300">
+                Les compétences sont indisponibles depuis l&apos;API.
+              </p>
+            )}
+            {!isLoading && !hasError && skills.length === 0 && (
               <p className="text-slate-400">
                 Aucune compétence enregistrée pour le moment.
               </p>
-            ) : (
+            )}
+            {!isLoading && !hasError && skills.length > 0 && (
               <div className="space-y-4">
                 {skills.map((skill) => (
                   <div
@@ -100,6 +110,7 @@ export default function SkillsPage() {
                         {skill.progression}%
                       </span>
                     </div>
+                    <p className="mb-2 text-xs text-slate-500">{skill.niveau}</p>
                     <div className="h-2 overflow-hidden rounded-full bg-slate-800">
                       <div
                         className="h-full rounded-full bg-red-500"
@@ -113,6 +124,7 @@ export default function SkillsPage() {
           </section>
         </div>
       </main>
-    </div>
+      </div>
+    </AdminAuthGuard>
   );
 }

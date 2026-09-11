@@ -5,8 +5,7 @@ import { Send } from "lucide-react";
 
 import { contactInfos, socials } from "@/data/about";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
+import { apiFetch } from "@/lib/api";
 
 export function ContactSection() {
   const { t } = useLanguage();
@@ -31,7 +30,7 @@ export function ContactSection() {
     setSubmitMessage("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Message`, {
+      await apiFetch("Message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,10 +42,6 @@ export function ContactSection() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Votre message n'a pas pu être envoyé.");
-      }
-
       setSubmitMessage(t.contact.sent);
       setFormData({ name: "", email: "", message: "" });
     } catch {
@@ -57,22 +52,20 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="px-6 py-20 scroll-mt-20">
-      <div className="max-w-6xl mx-auto">
+    <section id="contact" className="scroll-mt-20 px-6 py-20">
+      <div className="mx-auto max-w-6xl">
         <div className="max-w-lg">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-8 h-0.5 bg-red-500" />
-            <span className="text-red-500 text-sm font-mono">{t.contact.eyebrow}</span>
+          <div className="mb-4 flex items-center gap-2">
+            <span className="h-0.5 w-8 bg-red-500" />
+            <span className="font-mono text-sm text-red-500">{t.contact.eyebrow}</span>
           </div>
           <h2 className="text-4xl font-extrabold text-white">
             {t.contact.title}
           </h2>
-          <p className="mt-4 text-gray-400">
-            {t.contact.description}
-          </p>
+          <p className="mt-4 text-gray-400">{t.contact.description}</p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
           <div className="space-y-4">
             {contactInfos.map((info) => {
               const Icon = info.icon;
@@ -82,23 +75,23 @@ export function ContactSection() {
                 <Wrapper
                   key={info.label}
                   href={info.href || undefined}
-                  className="flex items-center gap-4 bg-gray-900 border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-colors"
+                  className="flex items-center gap-4 rounded-2xl border border-gray-800 bg-gray-900 p-4 transition-colors hover:border-gray-700"
                 >
                   <div
-                    className={`w-11 h-11 flex items-center justify-center rounded-xl ${info.iconBg}`}
+                    className={`flex h-11 w-11 items-center justify-center rounded-xl ${info.iconBg}`}
                   >
-                    <Icon className={`w-5 h-5 ${info.iconColor}`} />
+                    <Icon className={`h-5 w-5 ${info.iconColor}`} />
                   </div>
                   <div>
-                    <p className="text-gray-500 text-xs">{info.label}</p>
-                    <p className="text-white font-semibold">{info.value}</p>
+                    <p className="text-xs text-gray-500">{info.label}</p>
+                    <p className="font-semibold text-white">{info.value}</p>
                   </div>
                 </Wrapper>
               );
             })}
 
             <div className="pt-4">
-              <p className="text-gray-500 text-xs font-mono tracking-wide mb-3">
+              <p className="mb-3 font-mono text-xs tracking-wide text-gray-500">
                 {t.contact.social}
               </p>
               <div className="flex gap-3">
@@ -108,7 +101,7 @@ export function ContactSection() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-gray-900 border border-gray-800 rounded-full text-gray-300 text-sm hover:bg-gray-800 transition-colors"
+                    className="rounded-full border border-gray-800 bg-gray-900 px-4 py-2 text-sm text-gray-300 transition-colors hover:bg-gray-800"
                   >
                     {social.label}
                   </a>
@@ -119,44 +112,47 @@ export function ContactSection() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-gray-400 text-xs font-mono mb-2">
+              <label className="mb-2 block font-mono text-xs text-gray-400">
                 {t.contact.name}
               </label>
               <input
+                required
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Jean Dupont"
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500 transition-colors"
+                placeholder="Votre nom"
+                className="w-full rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 text-white placeholder-gray-600 transition-colors focus:border-red-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-gray-400 text-xs font-mono mb-2">
+              <label className="mb-2 block font-mono text-xs text-gray-400">
                 Email
               </label>
               <input
+                required
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="jean@exemple.com"
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500 transition-colors"
+                placeholder="vous@domaine.com"
+                className="w-full rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 text-white placeholder-gray-600 transition-colors focus:border-red-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-gray-400 text-xs font-mono mb-2">
+              <label className="mb-2 block font-mono text-xs text-gray-400">
                 {t.contact.message}
               </label>
               <textarea
+                required
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
                 placeholder={t.contact.messagePlaceholder}
                 rows={5}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500 transition-colors resize-none"
+                className="w-full resize-none rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 text-white placeholder-gray-600 transition-colors focus:border-red-500 focus:outline-none"
               />
             </div>
 
@@ -167,10 +163,10 @@ export function ContactSection() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-red-400 text-white font-semibold py-3.5 rounded-xl transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-3.5 font-semibold text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-red-400"
             >
               {isSubmitting ? t.contact.sending : t.contact.send}
-              <Send className="w-4 h-4" />
+              <Send className="h-4 w-4" />
             </button>
           </form>
         </div>

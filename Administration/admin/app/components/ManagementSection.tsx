@@ -1,5 +1,4 @@
 import { AddFormPanel } from "./AddFormPanel";
-import { NotificationsPanel } from "./NotificationsPanel";
 import { ProjectForm } from "./ProjectForm";
 import { SkillForm } from "./SkillForm";
 
@@ -9,12 +8,9 @@ export function ManagementSection() {
       <AddFormPanel label="un projet">
         <ProjectForm />
       </AddFormPanel>
-      <div className="space-y-6">
-        <AddFormPanel label="une compétence">
-          <SkillForm />
-        </AddFormPanel>
-        <NotificationsPanel />
-      </div>
+      <AddFormPanel label="une compétence">
+        <SkillForm />
+      </AddFormPanel>
     </section>
   );
 }

@@ -2,14 +2,23 @@
 
 import { useState, type FormEvent } from "react";
 
+import { apiFetch } from "@/lib/api";
+
 export type SkillFormValue = {
-  id?: string | number;
+  id: string;
   name: string;
   level: string;
   progress: string;
+  create_at: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
+type CreatedSkill = {
+  id: string;
+  nom: string;
+  niveau: string;
+  progression: number;
+  create_at: string;
+};
 
 export function SkillForm({
   onSaved,
@@ -25,35 +34,44 @@ export function SkillForm({
     setSubmitMessage("");
 
     const formData = new FormData(event.currentTarget);
-    const payload = {
-      Nom: String(formData.get("Nom") || ""),
-      Progression: Number(formData.get("Progression") || 0),
-    };
+    const name = String(formData.get("Nom") ?? "").trim();
+    const progressionValue = String(formData.get("Progression") ?? "");
+    const progression = Number(progressionValue);
+
+    if (!name || progressionValue === "" || !Number.isFinite(progression)) {
+      setSubmitMessage("Le nom et la progression sont requis.");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Competences`, {
+      const savedSkill = await apiFetch<CreatedSkill>("Competences", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          Nom: name,
+          Progression: progression,
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error("La compétence n'a pas pu être enregistrée.");
+      if (
+        !savedSkill.id ||
+        !savedSkill.nom ||
+        !savedSkill.niveau ||
+        !Number.isFinite(savedSkill.progression) ||
+        !savedSkill.create_at
+      ) {
+        throw new Error("La réponse du serveur est incomplète.");
       }
 
-      const savedSkill = await response.json();
       onSaved?.({
         id: savedSkill.id,
-        name: String(savedSkill.nom || payload.Nom),
-        level:
-          savedSkill.progression >= 85
-            ? "Expert"
-            : savedSkill.progression >= 60
-              ? "Avancé"
-              : "Intermédiaire",
-        progress: String(savedSkill.progression ?? payload.Progression),
+        name: savedSkill.nom,
+        level: savedSkill.niveau,
+        progress: String(savedSkill.progression),
+        create_at: savedSkill.create_at,
       });
 
       setSubmitMessage("Compétence enregistrée avec succès.");
@@ -73,9 +91,6 @@ export function SkillForm({
         <h2 className="text-2xl font-bold text-white">
           Ajouter une compétence
         </h2>
-        <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-300">
-          +1
-        </span>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
@@ -84,7 +99,6 @@ export function SkillForm({
             name="Nom"
             type="text"
             required
-            placeholder="Node.js"
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-red-500 focus:outline-none"
           />
         </label>
@@ -92,11 +106,12 @@ export function SkillForm({
           <span className="mb-2 block text-sm text-slate-300">Progression</span>
           <input
             name="Progression"
-            type="range"
+            type="number"
             min="0"
             max="100"
-            defaultValue="80"
-            className="w-full accent-red-500"
+            step="1"
+            required
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-red-500 focus:outline-none"
           />
         </label>
         {submitMessage && (

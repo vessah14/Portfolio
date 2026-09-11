@@ -18,7 +18,7 @@ export type SkillCategory = {
 export type Project = {
   id: string | number;
   title: string;
-  year: number;
+  year: number | null;
   category: string;
   description: string;
   image?: string;
@@ -35,51 +35,6 @@ export type ContactInfo = {
   href: string | null;
 };
 
-export const skillCategories: SkillCategory[] = [
-  {
-    title: "Frontend",
-    icon: "💻",
-    skills: [
-      { name: "HTML & CSS", level: "Expert", progress: 95 },
-      { name: "React / Next.js", level: "Avancé", progress: 80 },
-      { name: "Tailwind CSS", level: "Avancé", progress: 78 },
-      { name: "TypeScript", level: "Avancé", progress: 65 },
-      { name: "Vue.js", level: "Intermédiaire", progress: 50 },
-    ],
-  },
-  {
-    title: "Backend",
-    icon: "⚙️",
-    skills: [
-      { name: "Node.js / Express", level: "Avancé", progress: 80 },
-      { name: "MySQL / PostgreSQL", level: "Avancé", progress: 75 },
-      { name: "Python / Django", level: "Intermédiaire", progress: 55 },
-      { name: "MongoDB", level: "Intermédiaire", progress: 55 },
-      { name: "PHP / Laravel", level: "Intermédiaire", progress: 55 },
-    ],
-  },
-  {
-    title: "Design",
-    icon: "🎨",
-    skills: [
-      { name: "Figma", level: "Avancé", progress: 78 },
-      { name: "Adobe Photoshop", level: "Avancé", progress: 78 },
-      { name: "Adobe Illustrator", level: "Avancé", progress: 65 },
-      { name: "After Effects", level: "Intermédiaire", progress: 45 },
-    ],
-  },
-  {
-    title: "DevOps & Outils",
-    icon: "🔧",
-    skills: [
-      { name: "Git / GitHub", level: "Avancé", progress: 85 },
-      { name: "REST APIs", level: "Avancé", progress: 80 },
-      { name: "Linux", level: "Intermédiaire", progress: 55 },
-      { name: "Docker", level: "Intermédiaire", progress: 50 },
-    ],
-  },
-];
-
 export const levelStyles: Record<SkillLevel, string> = {
   Expert: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30",
   Avancé: "bg-sky-500/10 text-sky-400 border border-sky-500/30",
@@ -92,10 +47,6 @@ export const progressColors: Record<SkillLevel, string> = {
   Avancé: "bg-sky-500",
   Intermédiaire: "bg-amber-500",
 };
-
-export const projects: Project[] = [];
-
-export const categories: string[] = ["Tous"];
 
 export const contactInfos: ContactInfo[] = [
   {
@@ -126,5 +77,8 @@ export const contactInfos: ContactInfo[] = [
 
 export const socials = [
   { label: "GitHub", href: "https://github.com/vessah14" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/ndifon-vessah-379aaa430/" },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/ndifon-vessah-379aaa430/",
+  },
 ];

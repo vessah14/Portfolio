@@ -4,22 +4,47 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import { apiFetch } from "@/lib/api";
+import { setAdminToken } from "@/lib/auth";
+
+type LoginResponse = {
+  token?: string;
+  Token?: string;
+};
+
 export function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
 
-    if (!email || !password) {
-      setError("Veuillez renseigner votre email et votre mot de passe.");
-      return;
+    try {
+      const result = await apiFetch<LoginResponse>("User/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ Email: email, Password: password }),
+      });
+      const token = result.token ?? result.Token;
+
+      if (!token) {
+        throw new Error("Le serveur n'a pas retourné de jeton de connexion.");
+      }
+
+      setAdminToken(token);
+      router.push("/dashboard");
+    } catch {
+      setError("Email ou mot de passe incorrect, ou API indisponible.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    localStorage.setItem("vnatech-admin-auth", "true");
-    router.push("/dashboard");
   }
 
   return (
@@ -46,7 +71,7 @@ export function AdminLogin() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="admin@vnatech.com"
+              autoComplete="email"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
             />
           </label>
@@ -59,20 +84,21 @@ export function AdminLogin() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Votre mot de passe"
+              autoComplete="current-password"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
             />
           </label>
           {error && (
-            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {error}
             </p>
           )}
           <button
             type="submit"
-            className="w-full rounded-xl bg-red-500 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-red-400"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-red-500 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Accéder au dashboard
+            {isSubmitting ? "Connexion..." : "Accéder au dashboard"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-400">

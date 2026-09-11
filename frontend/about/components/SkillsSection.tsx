@@ -1,23 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";  
+import { motion } from "motion/react";
 import {
   levelStyles,
   progressColors,
-  skillCategories as fallbackSkillCategories,
 } from "@/data/about";
 import type { SkillCategory, SkillItem, SkillLevel } from "@/data/about";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
+import { apiFetch } from "@/lib/api";
 
 type ApiCompetence = {
   id: string;
   nom: string;
+  niveau: string;
   progression: number;
   create_at: string;
 };
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
 
 const skillCategoryDefinitions = [
   {
@@ -97,16 +96,8 @@ const skillCategoryDefinitions = [
   },
 ] as const;
 
-function mapProgressToLevel(progress: number): SkillLevel {
-  if (progress >= 85) {
-    return "Expert";
-  }
-
-  if (progress >= 60) {
-    return "Avancé";
-  }
-
-  return "Intermédiaire";
+function isSkillLevel(value: string): value is SkillLevel {
+  return value === "Expert" || value === "Avancé" || value === "Intermédiaire";
 }
 
 function classifySkill(name: string): SkillCategory["title"] {
@@ -121,26 +112,35 @@ function classifySkill(name: string): SkillCategory["title"] {
 
 export function SkillsSection() {
   const { t } = useLanguage();
-  const [skillCategories, setSkillCategories] = useState<SkillCategory[]>(
-    fallbackSkillCategories,
-  );
+  const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const loadSkills = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/Competences`);
+        const apiCompetences = await apiFetch<ApiCompetence[]>("Competences");
 
-        if (!response.ok) {
-          throw new Error("Impossible de récupérer les compétences.");
+        if (!Array.isArray(apiCompetences)) {
+          throw new Error("La réponse API des compétences est invalide.");
         }
 
-        const apiCompetences: ApiCompetence[] = await response.json();
+        const mappedSkills: SkillItem[] = apiCompetences.flatMap((competence) => {
+          const name = competence.nom.trim();
+          const level = competence.niveau.trim();
 
-        const mappedSkills: SkillItem[] = apiCompetences.map((competence) => ({
-          name: competence.nom,
-          level: mapProgressToLevel(competence.progression),
-          progress: competence.progression,
-        }));
+          if (!name || !isSkillLevel(level)) {
+            return [];
+          }
+
+          return [
+            {
+              name,
+              level,
+              progress: Math.max(0, Math.min(100, competence.progression)),
+            },
+          ];
+        });
 
         const groupedSkills = skillCategoryDefinitions.map((category) => ({
           title: category.title,
@@ -153,8 +153,12 @@ export function SkillsSection() {
         setSkillCategories(
           groupedSkills.filter((category) => category.skills.length > 0),
         );
+        setHasError(false);
       } catch {
-        setSkillCategories(fallbackSkillCategories);
+        setSkillCategories([]);
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -162,35 +166,46 @@ export function SkillsSection() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+    <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
+      {isLoading && (
+        <p className="text-sm text-gray-400">Chargement des compétences...</p>
+      )}
+      {hasError && (
+        <p className="text-sm text-amber-300">
+          Les compétences sont indisponibles actuellement.
+        </p>
+      )}
+      {!isLoading && !hasError && skillCategories.length === 0 && (
+        <p className="text-sm text-gray-400">{t.projects.noSkills}</p>
+      )}
       {skillCategories.map((category) => (
-       <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
           key={category.title}
-          className="bg-gray-900 border border-gray-800 rounded-2xl p-6"
+          className="rounded-2xl border border-gray-800 bg-gray-900 p-6"
         >
-          <div className="flex items-center gap-2 mb-5">
+          <div className="mb-5 flex items-center gap-2">
             <span className="text-xl">{category.icon}</span>
-            <h3 className="text-white font-bold text-lg">{category.title}</h3>
+            <h3 className="text-lg font-bold text-white">{category.title}</h3>
           </div>
 
           <div className="space-y-5">
             {category.skills.map((skill, skillIndex) => (
               <div key={`${category.title}-${skill.name}-${skillIndex}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-200 text-sm font-medium">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-200">
                     {skill.name}
                   </span>
                   <span
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${levelStyles[skill.level]}`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${levelStyles[skill.level]}`}
                   >
                     {t.levels[skill.level]}
                   </span>
                 </div>
-                <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-800">
                   <div
                     className={`h-full rounded-full ${progressColors[skill.level]}`}
                     style={{ width: `${skill.progress}%` }}

@@ -3,22 +3,23 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
-type AdminUser = {
-  name: string;
-  email: string;
-  password: string;
-};
+import { apiFetch } from "@/lib/api";
+
+type RegistrationResponse = string | { message?: string };
 
 export function AdminSignup() {
   const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
   const [hasError, setHasError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMessage("");
 
     if (password !== confirmation) {
       setHasError(true);
@@ -26,12 +27,34 @@ export function AdminSignup() {
       return;
     }
 
-    const user: AdminUser = { name, email, password };
-    localStorage.setItem("vnatech-admin-user", JSON.stringify(user));
-    setHasError(false);
-    setMessage("Compte créé. Vous pouvez maintenant vous connecter.");
-    setPassword("");
-    setConfirmation("");
+    setIsSubmitting(true);
+
+    try {
+      await apiFetch<RegistrationResponse>("User/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Nom: name,
+          Prenom: firstName,
+          Email: email,
+          Password: password,
+        }),
+      });
+      setHasError(false);
+      setMessage("Compte créé. Vous pouvez maintenant vous connecter.");
+      setName("");
+      setFirstName("");
+      setEmail("");
+      setPassword("");
+      setConfirmation("");
+    } catch {
+      setHasError(true);
+      setMessage("Le compte n'a pas pu être créé avec l'API.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -52,13 +75,24 @@ export function AdminSignup() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <label className="block">
-            <span className="mb-2 block text-sm text-slate-300">Nom complet</span>
+            <span className="mb-2 block text-sm text-slate-300">Nom</span>
             <input
               required
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Votre nom"
+              autoComplete="family-name"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-sm text-slate-300">Prénom</span>
+            <input
+              required
+              type="text"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              autoComplete="given-name"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
             />
           </label>
@@ -69,7 +103,7 @@ export function AdminSignup() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="admin@vnatech.com"
+              autoComplete="email"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
             />
           </label>
@@ -81,7 +115,7 @@ export function AdminSignup() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="6 caractères minimum"
+              autoComplete="new-password"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
             />
           </label>
@@ -95,12 +129,13 @@ export function AdminSignup() {
               type="password"
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
-              placeholder="Répétez votre mot de passe"
+              autoComplete="new-password"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-red-500"
             />
           </label>
           {message && (
             <p
+              role={hasError ? "alert" : "status"}
               className={`rounded-xl border px-4 py-3 text-sm ${
                 hasError
                   ? "border-red-500/30 bg-red-500/10 text-red-300"
@@ -112,9 +147,10 @@ export function AdminSignup() {
           )}
           <button
             type="submit"
-            className="w-full rounded-xl bg-red-500 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-red-400"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-red-500 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Créer mon compte
+            {isSubmitting ? "Création..." : "Créer mon compte"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-400">

@@ -34,7 +34,8 @@ public class MessageController : ControllerBase
                 Id = m.Id,
                 nom_envoyeur = m.nom_envoyeur,
                 email_envoyeur = m.email_envoyeur,
-                message = m.message
+                message = m.message,
+                create_at = m.create_at
             })
             .ToListAsync();
 
@@ -51,7 +52,8 @@ public class MessageController : ControllerBase
                 Id = m.Id,
                 nom_envoyeur = m.nom_envoyeur,
                 email_envoyeur = m.email_envoyeur,
-                message = m.message
+                message = m.message,
+                create_at = m.create_at
             })
             .FirstOrDefaultAsync();
 
@@ -85,9 +87,9 @@ public class MessageController : ControllerBase
 
         var message = new Message
         {
-            nom_envoyeur = messageDto.nom_envoyeur,
-            email_envoyeur = messageDto.email_envoyeur,
-            message = messageDto.message,
+            nom_envoyeur = messageDto.nom_envoyeur.Trim(),
+            email_envoyeur = messageDto.email_envoyeur.Trim(),
+            message = messageDto.message.Trim(),
             create_at = DateTime.UtcNow
         };
 
@@ -99,9 +101,9 @@ public class MessageController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(recipient))
         {
-            var senderName = WebUtility.HtmlEncode(messageDto.nom_envoyeur.Trim());
-            var senderEmail = WebUtility.HtmlEncode(messageDto.email_envoyeur.Trim());
-            var senderMessage = WebUtility.HtmlEncode(messageDto.message.Trim()).Replace("\n", "<br />");
+            var senderName = WebUtility.HtmlEncode(message.nom_envoyeur);
+            var senderEmail = WebUtility.HtmlEncode(message.email_envoyeur);
+            var senderMessage = WebUtility.HtmlEncode(message.message).Replace("\n", "<br />");
             var htmlBody = $"""
                 <h3>Nouveau message reçu</h3>
                 <p><strong>De :</strong> {senderName} ({senderEmail})</p>
@@ -111,7 +113,7 @@ public class MessageController : ControllerBase
 
             await _emailService.SendEmailAsync(
                 recipient,
-                $"Nouveau message depuis le portfolio - {messageDto.nom_envoyeur.Trim()}",
+                $"Nouveau message depuis le portfolio - {message.nom_envoyeur}",
                 htmlBody);
         }
 
@@ -120,7 +122,8 @@ public class MessageController : ControllerBase
             Id = message.Id,
             nom_envoyeur = message.nom_envoyeur,
             email_envoyeur = message.email_envoyeur,
-            message = message.message
+            message = message.message,
+            create_at = message.create_at
         };
 
         return CreatedAtAction(nameof(GetMessage), new { id = message.Id }, result);
@@ -140,9 +143,17 @@ public class MessageController : ControllerBase
             return NotFound();
         }
 
-        message.nom_envoyeur = messageDto.nom_envoyeur;
-        message.email_envoyeur = messageDto.email_envoyeur;
-        message.message = messageDto.message;
+        if (string.IsNullOrWhiteSpace(messageDto.nom_envoyeur) ||
+            string.IsNullOrWhiteSpace(messageDto.email_envoyeur) ||
+            string.IsNullOrWhiteSpace(messageDto.message) ||
+            !MailAddress.TryCreate(messageDto.email_envoyeur.Trim(), out _))
+        {
+            return BadRequest("Les données du message sont invalides.");
+        }
+
+        message.nom_envoyeur = messageDto.nom_envoyeur.Trim();
+        message.email_envoyeur = messageDto.email_envoyeur.Trim();
+        message.message = messageDto.message.Trim();
         message.create_at = DateTime.UtcNow;
 
         try

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { Project } from "@/data/about";
 import { ProjectCard } from "./ProjectCard";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
+import { apiFetch } from "@/lib/api";
 
 type ApiProject = {
   id: string;
@@ -20,10 +21,6 @@ type ApiProject = {
 type ApiCategory = {
   id: string;
   nom: string;
-};
-
-type ApiEnvelope<T> = {
-  value?: T[];
 };
 
 const normalizeCategoryName = (value: string) => {
@@ -49,40 +46,25 @@ const normalizeCategoryName = (value: string) => {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://portfolio-1-ypt3.onrender.com/api";
-
 export function RealisationsSection() {
   const { t } = useLanguage();
-  const [activeCategory, setActiveCategory] = useState<string>("Tous");
+  const [activeCategory, setActiveCategory] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [categories, setCategories] = useState<string[]>(["Tous"]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const [projectsResponse, categoriesResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/Projet`),
-          fetch(`${API_BASE_URL}/Categories`),
+        const [apiProjects, apiCategories] = await Promise.all([
+          apiFetch<ApiProject[]>("Projet"),
+          apiFetch<ApiCategory[]>("Categories"),
         ]);
 
-        if (!projectsResponse.ok || !categoriesResponse.ok) {
-          throw new Error("Impossible de récupérer les projets.");
+        if (!Array.isArray(apiProjects) || !Array.isArray(apiCategories)) {
+          throw new Error("La réponse API des projets est invalide.");
         }
-
-        const projectsPayload = (await projectsResponse.json()) as
-          | ApiProject[]
-          | ApiEnvelope<ApiProject>;
-        const categoriesPayload = (await categoriesResponse.json()) as
-          | ApiCategory[]
-          | ApiEnvelope<ApiCategory>;
-
-        const apiProjects = Array.isArray(projectsPayload)
-          ? projectsPayload
-          : projectsPayload.value ?? [];
-
-        const apiCategories = Array.isArray(categoriesPayload)
-          ? categoriesPayload
-          : categoriesPayload.value ?? [];
 
         const categoryMap = new Map(
           apiCategories.map((category) => [
@@ -91,79 +73,108 @@ export function RealisationsSection() {
           ]),
         );
 
-        const mappedProjects: Project[] = apiProjects.map((project) => ({
-          id: project.id,
-          title: project.titre,
-          year: new Date(project.create_at).getFullYear(),
-          category: categoryMap.get(project.categorieId) ?? "Autre",
-          description: project.description,
-          image: project.photo_Url || undefined,
-          lien: project.lien || undefined,
-          tags: [],
-        }));
+        const mappedProjects: Project[] = apiProjects.map((project) => {
+          const parsedYear = new Date(project.create_at).getFullYear();
 
-        const nextProjects = mappedProjects.length > 0 ? mappedProjects : [];
-        const nextCategories =
-          apiCategories.length > 0
-            ? Array.from(
-                new Set([
-                  "Tous",
-                  ...apiCategories.map((category) =>
-                    normalizeCategoryName(category.nom),
-                  ),
-                ]),
-              )
-            : ["Tous"];
+          return {
+            id: project.id,
+            title: project.titre,
+            year: Number.isNaN(parsedYear) ? null : parsedYear,
+            category: categoryMap.get(project.categorieId) ?? "",
+            description: project.description,
+            image: project.photo_Url || undefined,
+            lien: project.lien || undefined,
+            tags: [],
+          };
+        });
 
-        setProjects(nextProjects);
-        setCategories(nextCategories);
+        setProjects(mappedProjects);
+        setCategories(
+          Array.from(
+            new Set(
+              apiCategories
+                .map((category) => normalizeCategoryName(category.nom))
+                .filter(Boolean),
+            ),
+          ),
+        );
+        setHasError(false);
       } catch {
         setProjects([]);
-        setCategories(["Tous"]);
+        setCategories([]);
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadProjects();
   }, []);
 
-  const filteredProjects =
-    activeCategory === "Tous"
-      ? projects
-      : projects.filter((project) => project.category === activeCategory);
+  const filteredProjects = activeCategory
+    ? projects.filter((project) => project.category === activeCategory)
+    : projects;
 
   return (
-    <section id="projects" className="max-w-300 mx-auto px-6 py-16 scroll-mt-20">
+    <section id="projects" className="mx-auto max-w-300 scroll-mt-20 px-6 py-16">
       <h2 className="text-4xl font-extrabold text-white">{t.projects.title}</h2>
-      <p className="mt-3 text-gray-400 max-w-xl">
-        {t.projects.description}
-      </p>
+      <p className="mt-3 max-w-xl text-gray-400">{t.projects.description}</p>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {categories.map((cat) => (
+      {categories.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-3">
           <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              activeCategory === cat
+            type="button"
+            onClick={() => setActiveCategory("")}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              activeCategory === ""
                 ? "bg-red-500 text-white"
                 : "bg-gray-800 text-gray-300 hover:bg-gray-700"
             }`}
           >
-            {cat}
+            {t.projects.all}
           </button>
-        ))}
-      </div>
+          {categories.map((category) => (
+            <button
+              type="button"
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                activeCategory === category
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
-     className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
-      </motion.div>
+      {isLoading && (
+        <p className="mt-8 text-gray-400">Chargement des projets...</p>
+      )}
+      {hasError && (
+        <p className="mt-8 text-amber-300">
+          Les projets sont indisponibles actuellement.
+        </p>
+      )}
+      {!isLoading && !hasError && filteredProjects.length === 0 && (
+        <p className="mt-8 text-gray-400">{t.projects.noProjects}</p>
+      )}
+
+      {!isLoading && !hasError && filteredProjects.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+        >
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </motion.div>
+      )}
     </section>
   );
 }
