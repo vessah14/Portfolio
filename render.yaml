@@ -30,11 +30,9 @@ services:
       - key: Smtp__NotificationRecipient
         sync: false
       - key: Cors__AllowedOrigins__0
-        value: https://portfolio-5j1l-git-main-vessah14-1878s-projects.vercel.app
+        value: *
       - key: Cors__AllowedOrigins__1
         value: http://localhost:3000
-      - key: Cors__AllowedOrigins__2
-        value: https://admin-5j1l-git-main-vessah14-1878s-projects.vercel.app
       - key: Cloudinary__CloudName
         sync: false
       - key: Cloudinary__ApiKey
