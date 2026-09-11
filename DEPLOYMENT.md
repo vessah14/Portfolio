@@ -17,7 +17,8 @@
 - `Jwt__Audience` : `MonApiUsers`
 - `Cloudinary__CloudName`, `Cloudinary__ApiKey`, `Cloudinary__ApiSecret` : identifiants Cloudinary
 - `Smtp__Host`, `Smtp__Port`, `Smtp__From`, `Smtp__User`, `Smtp__Password`, `Smtp__NotificationRecipient` : configuration SMTP
-- `Cors__AllowedOrigins__0` : origine publique du frontend, par exemple `https://mon-portfolio.example`
+- `Cors__AllowedOrigins__0` : `https://frontend-wheat-two-hh3yzglt50.vercel.app`
+- `Cors__AllowedOrigins__1` : `https://admin-amber-six-49.vercel.app`
 
 Le service Render utilise `backend/Dockerfile` et le fichier [render.yaml](./render.yaml). Le fichier local [backend/appsettings.json](./backend/appsettings.json) n'est pas modifié par le projet et reste ignoré par Git.
 
@@ -37,6 +38,17 @@ Le frontend public et l'administration peuvent être déployés sur n'importe qu
 - `NEXT_PUBLIC_SITE_URL` : URL publique du frontend public, utilisée pour les métadonnées, le sitemap et les robots
 
 Si `NEXT_PUBLIC_API_URL` est absent, les deux applications utilisent l'URL Render du projet comme valeur de secours. Aucun projet, compétence, statistique, message ou compte ne repose sur des données locales simulées.
+
+### URLs actuellement publiées
+
+- **Frontend public sur Vercel** : `https://frontend-wheat-two-hh3yzglt50.vercel.app`
+- **Administration sur Vercel** : `https://admin-amber-six-49.vercel.app`
+- **API backend sur Render** : `https://portfolio-1-ypt3.onrender.com`
+
+Les variables Vercel utilisées pour les deux projets sont :
+
+- `NEXT_PUBLIC_API_URL` : `https://portfolio-1-ypt3.onrender.com/api`
+- `NEXT_PUBLIC_SITE_URL` : `https://frontend-wheat-two-hh3yzglt50.vercel.app` pour le frontend public
 
 ## Données et authentification
 

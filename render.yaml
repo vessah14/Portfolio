@@ -31,7 +31,9 @@ services:
       - key: Smtp__NotificationRecipient
         sync: false
       - key: Cors__AllowedOrigins__0
-        value: "*"
+        value: https://frontend-wheat-two-hh3yzglt50.vercel.app
+      - key: Cors__AllowedOrigins__1
+        value: https://admin-amber-six-49.vercel.app
       - key: Cloudinary__CloudName
         sync: false
       - key: Cloudinary__ApiKey
