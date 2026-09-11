@@ -57,7 +57,7 @@ export function ContactSection() {
   };
 
   return (
-    <section className=" px-6 py-20">
+    <section id="contact" className="px-6 py-20 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
         <div className="max-w-lg">
           <div className="flex items-center gap-2 mb-4">

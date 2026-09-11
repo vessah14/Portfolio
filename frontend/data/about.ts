@@ -30,7 +30,6 @@ export type ContactInfo = {
   icon: LucideIcon;
   label: string;
   value: string;
-  href: string | null;
   iconBg: string;
   iconColor: string;
 };
@@ -101,24 +100,21 @@ export const contactInfos: ContactInfo[] = [
   {
     icon: Mail,
     label: "Email",
-    value: "contact@vnatech.com",
-    href: "mailto:contact@vnatech.com",
+    value: "vessah14@gmail.com",
     iconBg: "bg-red-500/10",
     iconColor: "text-red-400",
   },
   {
     icon: Phone,
-    label: "WhatsApp",
-    value: "+237 6 00 00 00 00",
-    href: "https://wa.me/2376000000",
+    label: "Tel",
+    value: "+237 6 73 05 42 60",
     iconBg: "bg-emerald-500/10",
     iconColor: "text-emerald-400",
   },
   {
     icon: MapPin,
     label: "Localisation",
-    value: "Cameroun 🇨🇲",
-    href: null,
+    value: "Douala-Bonaberi",
     iconBg: "bg-pink-500/10",
     iconColor: "text-pink-400",
   },

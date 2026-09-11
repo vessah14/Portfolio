@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
+import { motion } from "motion/react";
 import { ContactSection } from "./components/ContactSection";
 import { RealisationsSection } from "./components/RealisationsSection";
 import { SkillsSection } from "./components/SkillsSection";
@@ -69,9 +69,9 @@ const normalizeCategoryName = (value: string) => {
 
 export default function Container() {
   return (
-    <div className="text-white py-20 bg-black">
+    <section id="about" className="text-white py-20 bg-black scroll-mt-20">
       <About />
-    </div>
+    </section>
   );
 }
 
@@ -104,10 +104,14 @@ function About() {
         }
 
         const projectsPayload = (await projectsResponse.json()) as ApiProject[];
-        const categoriesPayload = (await categoriesResponse.json()) as ApiCategory[];
-        const competencesPayload = (await competencesResponse.json()) as ApiCompetence[];
+        const categoriesPayload =
+          (await categoriesResponse.json()) as ApiCategory[];
+        const competencesPayload =
+          (await competencesResponse.json()) as ApiCompetence[];
 
-        const apiProjects = Array.isArray(projectsPayload) ? projectsPayload : [];
+        const apiProjects = Array.isArray(projectsPayload)
+          ? projectsPayload
+          : [];
         const apiCategories = Array.isArray(categoriesPayload)
           ? categoriesPayload
           : [];
@@ -172,13 +176,19 @@ function About() {
     <>
       <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <span className="text-sm font-semibold uppercase tracking-[0.25em] text-red-500">
-            {t.about.eyebrow}
-          </span>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-8 h-0.5 bg-red-500" />
+            <span className="text-red-500 text-sm font-mono">
+              {t.about.eyebrow}
+            </span>
+          </div>
         </div>
 
         <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative mx-auto w-full max-w-105">
+          <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }} className="relative mx-auto w-full max-w-105">
             <div className="absolute inset-6 rounded-full bg-red-500/10 blur-3xl" />
 
             <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-950 p-3 shadow-[0_30px_80px_rgba(239,68,68,0.2)]">
@@ -196,7 +206,7 @@ function About() {
               <span aria-hidden="true">🎨</span>
               <span>Design</span>
             </div>
-          </div>
+          </motion.div>
 
           <div className="space-y-6">
             <h2 className="text-4xl font-extrabold leading-tight md:text-5xl">
@@ -205,12 +215,8 @@ function About() {
             </h2>
 
             <div className="space-y-4 text-lg text-gray-400 leading-relaxed">
-              <p>
-                {t.about.first}
-              </p>
-              <p>
-                {t.about.second}
-              </p>
+              <p>{t.about.first}</p>
+              <p>{t.about.second}</p>
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
@@ -241,7 +247,9 @@ function About() {
                   <div className="text-4xl font-extrabold text-red-500 md:text-5xl">
                     {stat.value}
                   </div>
-                  <div className="mt-2 text-sm text-gray-300">{statLabels[index]}</div>
+                  <div className="mt-2 text-sm text-gray-300">
+                    {statLabels[index]}
+                  </div>
                 </div>
               ))}
             </div>
@@ -251,9 +259,12 @@ function About() {
 
       <div className="mt-20 space-y-6 bg-gray-950 py-20">
         <div className="mx-auto max-w-300 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-red-500">
-            {t.about.skillsEyebrow}
-          </h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-8 h-0.5 bg-red-500" />
+            <span className="text-red-500 text-sm font-mono">
+              {t.about.skillsEyebrow}
+            </span>
+          </div>
           <h2 className="text-4xl font-extrabold leading-tight md:text-5xl">
             {t.about.skillsTitle}
           </h2>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { motion } from "motion/react";  
 import {
   levelStyles,
   progressColors,
@@ -164,7 +164,11 @@ export function SkillsSection() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
       {skillCategories.map((category) => (
-        <div
+       <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
           key={category.title}
           className="bg-gray-900 border border-gray-800 rounded-2xl p-6"
         >
@@ -195,7 +199,7 @@ export function SkillsSection() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );

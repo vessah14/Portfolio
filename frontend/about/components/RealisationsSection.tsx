@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import type { Project } from "@/data/about";
@@ -131,7 +132,7 @@ export function RealisationsSection() {
       : projects.filter((project) => project.category === activeCategory);
 
   return (
-    <section className="max-w-300 mx-auto px-6 py-16">
+    <section id="projects" className="max-w-300 mx-auto px-6 py-16 scroll-mt-20">
       <h2 className="text-4xl font-extrabold text-white">{t.projects.title}</h2>
       <p className="mt-3 text-gray-400 max-w-xl">
         {t.projects.description}
@@ -153,11 +154,16 @@ export function RealisationsSection() {
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+     className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
