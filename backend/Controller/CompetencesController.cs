@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
@@ -56,6 +57,7 @@ public class CompetencesController : ControllerBase
         return Ok(competence);
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<CompetencesDto>> PostCompetence(CompetencesCreateDto competenceDto)
     {
@@ -87,6 +89,7 @@ public class CompetencesController : ControllerBase
         return CreatedAtAction(nameof(GetCompetence), new { id = competence.Id }, result);
     }
 
+    [Authorize]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> PutCompetence(Guid id, CompetencesCreateDto competenceDto)
     {
@@ -128,6 +131,7 @@ public class CompetencesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteCompetence(Guid id)
     {

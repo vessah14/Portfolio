@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.DTOs;
@@ -52,6 +53,7 @@ public class ProjetController : ControllerBase
         return Ok(MapToDto(projet));
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateProjet([FromForm] ProjetCreateDto dto, IFormFile? file)
     {
@@ -104,6 +106,7 @@ public class ProjetController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateProjet(Guid id, [FromForm] ProjetCreateDto dto, IFormFile? file)
     {
@@ -155,6 +158,7 @@ public class ProjetController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteProjet(Guid id)
     {

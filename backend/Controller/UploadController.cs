@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using backend.Services;
 
@@ -14,6 +15,7 @@ namespace backend.Controllers
             _cloudinaryService = cloudinaryService;
         }
 
+        [Authorize]
         [HttpPost("image")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadImage(IFormFile file)

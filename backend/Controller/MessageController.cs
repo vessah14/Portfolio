@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
@@ -24,6 +25,7 @@ public class MessageController : ControllerBase
         _configuration = configuration;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessages()
     {
@@ -42,6 +44,7 @@ public class MessageController : ControllerBase
         return Ok(messages);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<ActionResult<MessageDto>> GetMessage(Guid id)
     {
@@ -129,6 +132,7 @@ public class MessageController : ControllerBase
         return CreatedAtAction(nameof(GetMessage), new { id = message.Id }, result);
     }
 
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutMessage(Guid id, MessageCreateDto messageDto)
     {
@@ -173,6 +177,7 @@ public class MessageController : ControllerBase
         return NoContent();
     }
 
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteMessage(Guid id)
     {

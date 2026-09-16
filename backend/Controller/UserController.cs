@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Model;
@@ -22,6 +23,7 @@ public class UserController : ControllerBase
         _configuration = configuration;
     }
 
+    [Authorize]
     [HttpPost("register")]
     public async Task<IActionResult> Register(UserRegisterDto user)
     {

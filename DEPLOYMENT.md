@@ -31,7 +31,7 @@ Le service Render utilise `backend/Dockerfile` et le fichier [render.yaml](./ren
 
 Lorsque `AdminSeed__Enabled=true`, le backend crée au premier démarrage un compte dans la table PostgreSQL `Administrateur` avec les valeurs `AdminSeed__Nom`, `AdminSeed__Prenom`, `AdminSeed__Email` et `AdminSeed__Password`. Le mot de passe est haché avec BCrypt avant d'être enregistré.
 
-Le seed est idempotent : si l'adresse existe déjà, le mot de passe existant n'est jamais remplacé. Pour créer un nouveau compte initial, utilisez une nouvelle adresse ou créez le compte depuis l'interface d'inscription. Après avoir renseigné `AdminSeed__Password` dans Render, redémarrez le service backend afin d'exécuter le seed.
+Le seed est idempotent : si l'adresse existe déjà, le mot de passe existant n'est jamais remplacé. Pour créer un nouveau compte initial, utilisez une nouvelle adresse ou appelez `/api/User/register` avec un jeton admin valide. Après avoir renseigné `AdminSeed__Password` dans Render, redémarrez le service backend afin d'exécuter le seed.
 
 Identifiants par défaut configurés dans `render.yaml` :
 
@@ -70,11 +70,11 @@ Les variables Vercel utilisées pour les deux projets sont :
 
 - Les projets, catégories, compétences, statistiques et messages sont lus depuis l'API.
 - Les créations de projets et de compétences utilisent les réponses persistées retournées par l'API, sans identifiant temporaire ni image par défaut.
-- Le frontend public conserve ses routes d'inscription et de connexion si elles sont utilisées.
-- L'interface admin ouvre directement `/dashboard` : les routes `/` et `/signup` redirigent vers le dashboard et aucun formulaire de connexion ou d'inscription n'est affiché.
-- Les pages admin consomment directement les données de l'API et vérifient `/health` pour afficher l'état réel du backend.
+- Le frontend public n'a pas de compte visiteur : il n'expose ni inscription ni connexion, et se limite à la lecture publique des projets/compétences/catégories et à l'envoi du formulaire de contact.
+- L'interface admin affiche un formulaire de connexion sur `/`. Les pages `/dashboard`, `/projects`, `/skills`, `/activity` et `/messages` sont protégées par `AdminAuthGuard` et redirigent vers `/` si aucun jeton valide n'est présent en session. La route `/signup` redirige vers `/`.
+- Le jeton JWT est obtenu via `/api/User/login`, stocké en `sessionStorage` et envoyé en en-tête `Authorization: Bearer` par `apiFetch` sur chaque appel API.
+- Côté backend, `/api/User/register`, la création/modification/suppression des projets et compétences, l'upload d'images et la lecture/modification/suppression des messages exigent ce jeton (`[Authorize]`). Seuls la lecture publique des projets/compétences/catégories, `/api/User/login` et l'envoi d'un message de contact restent anonymes.
 - Les données du dashboard (visites, notifications ou taux inventés) ne sont pas affichées tant qu'aucun endpoint de base de données ne les fournit.
-- Cette interface admin n'est plus une zone protégée côté navigateur ; réactivez un contrôle d'accès backend avant toute exposition publique.
 
 ## Configuration locale du backend
 

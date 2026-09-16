@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { clearAdminToken } from "@/lib/auth";
 
 const navigationItems = [
   { label: "Vue d'ensemble", href: "/dashboard", icon: "▦" },
@@ -12,7 +15,13 @@ const navigationItems = [
 ];
 
 export function Sidebar() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+
+  function handleLogout() {
+    clearAdminToken();
+    router.push("/");
+  }
 
   return (
     <aside className="w-full shrink-0 border-b border-slate-800 bg-slate-900/95 md:min-h-screen md:w-64 md:border-b-0 md:border-r">
@@ -61,6 +70,14 @@ export function Sidebar() {
             ))}
           </div>
         </nav>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-8 w-full rounded-xl border border-slate-700 px-3 py-3 text-left text-sm text-slate-400 transition hover:border-red-400 hover:text-red-300"
+        >
+          Se déconnecter
+        </button>
       </div>
     </aside>
   );
