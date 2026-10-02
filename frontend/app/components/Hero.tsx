@@ -30,13 +30,13 @@ export default function Hero() {
 
           <div className="flex gap-4">
             <Link
-              href="/contact"
+              href="/#projects"
               className="bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 text-white font-semibold py-2 px-4 rounded-full mt-6 inline-block transition duration-300 ease-in-out transform hover:scale-105"
             >
               {t.hero.projects}
             </Link>
             <Link
-              href="/contact"
+              href="/#contact"
               className="bg-white/10 border-2 border-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-full mt-6 inline-block transition duration-300 ease-in-out transform hover:scale-105"
             >
               {t.hero.contact}
