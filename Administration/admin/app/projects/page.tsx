@@ -31,6 +31,8 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -86,6 +88,24 @@ export default function ProjectsPage() {
     ]);
   };
 
+  const handleDeleteProject = async (id: string, title: string) => {
+    if (!window.confirm(`Supprimer le projet "${title}" ?`)) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeletingId(id);
+
+    try {
+      await apiFetch(`Projet/${id}`, { method: "DELETE" });
+      setProjects((current) => current.filter((project) => project.id !== id));
+    } catch {
+      setDeleteError("Impossible de supprimer ce projet pour le moment.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <AdminAuthGuard>
       <div className="min-h-screen bg-slate-950 text-slate-100 md:flex">
@@ -125,6 +145,9 @@ export default function ProjectsPage() {
                 <p className="text-amber-300">
                   Les projets sont indisponibles depuis l&apos;API.
                 </p>
+              )}
+              {deleteError && (
+                <p className="mb-4 text-sm text-rose-300">{deleteError}</p>
               )}
               {!isLoading && !hasError && projects.length === 0 && (
                 <p className="text-slate-400">
@@ -167,16 +190,32 @@ export default function ProjectsPage() {
                           {project.description}
                         </p>
 
-                        {project.lien && (
-                          <a
-                            href={project.lien}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex text-sm font-medium text-red-300 hover:text-red-200"
+                        <div className="flex items-center justify-between gap-3 pt-1">
+                          {project.lien ? (
+                            <a
+                              href={project.lien}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex text-sm font-medium text-red-300 hover:text-red-200"
+                            >
+                              Voir le site
+                            </a>
+                          ) : (
+                            <span />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteProject(project.id, project.title)
+                            }
+                            disabled={deletingId === project.id}
+                            className="text-xs font-medium text-rose-400 transition hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            Voir le site
-                          </a>
-                        )}
+                            {deletingId === project.id
+                              ? "Suppression..."
+                              : "Supprimer"}
+                          </button>
+                        </div>
                       </div>
                     </article>
                   ))}
