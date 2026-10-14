@@ -23,6 +23,7 @@ export type Project = {
   description: string;
   image?: string;
   lien?: string;
+  apkUrl?: string;
   tags: string[];
 };
 

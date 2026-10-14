@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Download } from "lucide-react";
 
 import type { Project } from "@/data/about";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
@@ -74,25 +75,39 @@ export function ProjectCard({ project }: { project: Project }) {
             </div>
           )}
 
-          {hasProjectLink ? (
-            <a
-              href={project.lien}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-400"
-            >
-              {t.projects.viewSite} →
-            </a>
-          ) : (
-            <button
-              type="button"
-              onClick={() => hasImage && setIsModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!hasImage}
-            >
-              {isDesignGraphic ? t.projects.viewDetail : t.projects.viewDetails} →
-            </button>
-          )}
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+            {hasProjectLink ? (
+              <a
+                href={project.lien}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-400"
+              >
+                {t.projects.viewSite} →
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => hasImage && setIsModalOpen(true)}
+                className="inline-flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!hasImage}
+              >
+                {isDesignGraphic ? t.projects.viewDetail : t.projects.viewDetails} →
+              </button>
+            )}
+
+            {project.apkUrl && (
+              <a
+                href={project.apkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-500 hover:text-emerald-400"
+              >
+                <Download className="h-4 w-4" />
+                {t.projects.downloadApk}
+              </a>
+            )}
+          </div>
         </div>
       </div>
 

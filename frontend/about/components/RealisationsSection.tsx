@@ -15,6 +15,7 @@ type ApiProject = {
   photo_Url: string;
   categorieId: string;
   lien: string;
+  apkUrl?: string;
   create_at: string;
 };
 
@@ -84,6 +85,7 @@ export function RealisationsSection() {
             description: project.description,
             image: project.photo_Url || undefined,
             lien: project.lien || undefined,
+            apkUrl: project.apkUrl || undefined,
             tags: [],
           };
         });
