@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 
 import { AddFormPanel } from "../components/AddFormPanel";
 import { AdminAuthGuard } from "../components/AdminAuthGuard";
-import { ProjectForm, type ProjectFormValue } from "../components/ProjectForm";
+import {
+  ProjectForm,
+  type EditableProject,
+  type ProjectFormValue,
+} from "../components/ProjectForm";
 import { Sidebar } from "../components/Sidebar";
 import { apiFetch } from "@/lib/api";
 
@@ -16,15 +20,18 @@ type ApiProject = {
   photo_Url: string;
   categorieId: string;
   lien: string;
+  apkUrl?: string;
 };
 
 type ProjectListItem = {
   id: string;
   title: string;
   category: string;
+  categorieId: string;
   image?: string;
   description: string;
   lien?: string;
+  apkUrl?: string;
 };
 
 export default function ProjectsPage() {
@@ -33,6 +40,8 @@ export default function ProjectsPage() {
   const [hasError, setHasError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [editingProject, setEditingProject] =
+    useState<ProjectListItem | null>(null);
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -55,9 +64,11 @@ export default function ProjectsPage() {
             id: project.id,
             title: project.titre,
             category: categoryMap[project.categorieId] ?? "",
+            categorieId: project.categorieId,
             image: project.photo_Url || undefined,
             description: project.description,
             lien: project.lien || undefined,
+            apkUrl: project.apkUrl || undefined,
           }),
         );
 
@@ -80,12 +91,34 @@ export default function ProjectsPage() {
         id: project.id,
         title: project.title,
         category: project.category,
+        categorieId: project.categorieId,
         image: project.image,
         description: project.description,
         lien: project.lien,
+        apkUrl: project.apkUrl,
       },
       ...current,
     ]);
+  };
+
+  const handleUpdatedProject = (project: ProjectFormValue) => {
+    setProjects((current) =>
+      current.map((item) =>
+        item.id === project.id
+          ? {
+              id: project.id,
+              title: project.title,
+              category: project.category,
+              categorieId: project.categorieId,
+              image: project.image,
+              description: project.description,
+              lien: project.lien,
+              apkUrl: project.apkUrl,
+            }
+          : item,
+      ),
+    );
+    setEditingProject(null);
   };
 
   const handleDeleteProject = async (id: string, title: string) => {
@@ -105,6 +138,16 @@ export default function ProjectsPage() {
       setDeletingId(null);
     }
   };
+
+  const toEditableProject = (project: ProjectListItem): EditableProject => ({
+    id: project.id,
+    titre: project.title,
+    categorieId: project.categorieId,
+    lien: project.lien ?? "",
+    description: project.description,
+    apkUrl: project.apkUrl,
+    photo_Url: project.image ?? "",
+  });
 
   return (
     <AdminAuthGuard>
@@ -156,69 +199,97 @@ export default function ProjectsPage() {
               )}
               {!isLoading && !hasError && projects.length > 0 && (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {projects.map((project) => (
-                    <article
-                      key={project.id}
-                      className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60"
-                    >
-                      {project.image ? (
-                        <Image
-                          src={project.image}
-                          alt={project.title}
-                          width={800}
-                          height={450}
-                          className="h-44 w-full object-cover"
+                  {projects.map((project) =>
+                    editingProject?.id === project.id ? (
+                      <div key={project.id} className="md:col-span-2 xl:col-span-3">
+                        <ProjectForm
+                          editingProject={toEditableProject(editingProject)}
+                          onSaved={handleUpdatedProject}
+                          onCancel={() => setEditingProject(null)}
                         />
-                      ) : (
-                        <div className="flex h-44 items-center justify-center text-sm text-slate-500">
-                          Image non fournie
-                        </div>
-                      )}
-                      <div className="space-y-3 p-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            {project.title}
-                          </h3>
-                          {project.category && (
-                            <p className="text-sm text-cyan-300">
-                              {project.category}
-                            </p>
-                          )}
-                        </div>
-
-                        <p className="line-clamp-3 text-sm text-slate-400">
-                          {project.description}
-                        </p>
-
-                        <div className="flex items-center justify-between gap-3 pt-1">
-                          {project.lien ? (
-                            <a
-                              href={project.lien}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex text-sm font-medium text-red-300 hover:text-red-200"
-                            >
-                              Voir le site
-                            </a>
-                          ) : (
-                            <span />
-                          )}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDeleteProject(project.id, project.title)
-                            }
-                            disabled={deletingId === project.id}
-                            className="text-xs font-medium text-rose-400 transition hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {deletingId === project.id
-                              ? "Suppression..."
-                              : "Supprimer"}
-                          </button>
-                        </div>
                       </div>
-                    </article>
-                  ))}
+                    ) : (
+                      <article
+                        key={project.id}
+                        className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60"
+                      >
+                        {project.image ? (
+                          <Image
+                            src={project.image}
+                            alt={project.title}
+                            width={800}
+                            height={450}
+                            className="h-44 w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-44 items-center justify-center text-sm text-slate-500">
+                            Image non fournie
+                          </div>
+                        )}
+                        <div className="space-y-3 p-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">
+                              {project.title}
+                            </h3>
+                            {project.category && (
+                              <p className="text-sm text-cyan-300">
+                                {project.category}
+                              </p>
+                            )}
+                          </div>
+
+                          <p className="line-clamp-3 text-sm text-slate-400">
+                            {project.description}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            {project.lien && (
+                              <a
+                                href={project.lien}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex text-sm font-medium text-red-300 hover:text-red-200"
+                              >
+                                Voir le site
+                              </a>
+                            )}
+                            {project.apkUrl && (
+                              <a
+                                href={project.apkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex text-sm font-medium text-emerald-300 hover:text-emerald-200"
+                              >
+                                Télécharger l&apos;APK
+                              </a>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingProject(project)}
+                              className="text-xs font-medium text-cyan-300 transition hover:text-cyan-200"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteProject(project.id, project.title)
+                              }
+                              disabled={deletingId === project.id}
+                              className="text-xs font-medium text-rose-400 transition hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {deletingId === project.id
+                                ? "Suppression..."
+                                : "Supprimer"}
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ),
+                  )}
                 </div>
               )}
             </section>

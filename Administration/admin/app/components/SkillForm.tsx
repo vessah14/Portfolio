@@ -12,6 +12,14 @@ export type SkillFormValue = {
   create_at: string;
 };
 
+export type EditableSkill = {
+  id: string;
+  nom: string;
+  niveau: string;
+  progression: number;
+  create_at: string;
+};
+
 type CreatedSkill = {
   id: string;
   nom: string;
@@ -21,10 +29,15 @@ type CreatedSkill = {
 };
 
 export function SkillForm({
+  editingSkill,
   onSaved,
+  onCancel,
 }: {
+  editingSkill?: EditableSkill;
   onSaved?: (skill: SkillFormValue) => void;
+  onCancel?: () => void;
 }) {
+  const isEditing = Boolean(editingSkill);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
@@ -45,16 +58,29 @@ export function SkillForm({
     }
 
     try {
-      const savedSkill = await apiFetch<CreatedSkill>("Competences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Nom: name,
-          Progression: progression,
-        }),
-      });
+      const savedSkill = isEditing
+        ? await apiFetch<CreatedSkill>(`Competences/${editingSkill!.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              Nom: name,
+              Progression: progression,
+            }),
+          }).then(() =>
+            apiFetch<CreatedSkill>(`Competences/${editingSkill!.id}`),
+          )
+        : await apiFetch<CreatedSkill>("Competences", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              Nom: name,
+              Progression: progression,
+            }),
+          });
 
       if (
         !savedSkill.id ||
@@ -74,11 +100,20 @@ export function SkillForm({
         create_at: savedSkill.create_at,
       });
 
-      setSubmitMessage("Compétence enregistrée avec succès.");
-      event.currentTarget.reset();
+      setSubmitMessage(
+        isEditing
+          ? "Compétence modifiée avec succès."
+          : "Compétence enregistrée avec succès.",
+      );
+
+      if (!isEditing) {
+        event.currentTarget.reset();
+      }
     } catch {
       setSubmitMessage(
-        "Une erreur est survenue lors de l'enregistrement de la compétence.",
+        isEditing
+          ? "Une erreur est survenue lors de la modification de la compétence."
+          : "Une erreur est survenue lors de l'enregistrement de la compétence.",
       );
     } finally {
       setIsSubmitting(false);
@@ -89,7 +124,7 @@ export function SkillForm({
     <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">
-          Ajouter une compétence
+          {isEditing ? "Modifier la compétence" : "Ajouter une compétence"}
         </h2>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,6 +134,7 @@ export function SkillForm({
             name="Nom"
             type="text"
             required
+            defaultValue={editingSkill?.nom}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-red-500 focus:outline-none"
           />
         </label>
@@ -111,19 +147,35 @@ export function SkillForm({
             max="100"
             step="1"
             required
+            defaultValue={editingSkill?.progression}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-red-500 focus:outline-none"
           />
         </label>
         {submitMessage && (
           <p className="text-sm text-emerald-300">{submitMessage}</p>
         )}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-red-400"
-        >
-          {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-red-400"
+          >
+            {isSubmitting
+              ? "Enregistrement..."
+              : isEditing
+                ? "Modifier"
+                : "Sauvegarder"}
+          </button>
+          {isEditing && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:border-slate-500 hover:text-white"
+            >
+              Annuler
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );

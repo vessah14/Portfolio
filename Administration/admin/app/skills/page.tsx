@@ -8,6 +8,14 @@ import { Sidebar } from "../components/Sidebar";
 import { SkillForm, type SkillFormValue } from "../components/SkillForm";
 import { apiFetch } from "@/lib/api";
 
+type EditingSkillState = {
+  id: string;
+  nom: string;
+  niveau: string;
+  progression: number;
+  create_at: string;
+};
+
 type ApiSkill = {
   id: string;
   nom: string;
@@ -22,6 +30,9 @@ export default function SkillsPage() {
   const [hasError, setHasError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [editingSkill, setEditingSkill] = useState<EditingSkillState | null>(
+    null,
+  );
 
   useEffect(() => {
     const loadSkills = async () => {
@@ -56,6 +67,23 @@ export default function SkillsPage() {
       },
       ...current,
     ]);
+  };
+
+  const handleUpdatedSkill = (skill: SkillFormValue) => {
+    setSkills((current) =>
+      current.map((item) =>
+        item.id === skill.id
+          ? {
+              id: skill.id,
+              nom: skill.name,
+              niveau: skill.level,
+              progression: Number(skill.progress),
+              create_at: skill.create_at,
+            }
+          : item,
+      ),
+    );
+    setEditingSkill(null);
   };
 
   const handleDeleteSkill = async (id: string, nom: string) => {
@@ -126,40 +154,60 @@ export default function SkillsPage() {
               )}
               {!isLoading && !hasError && skills.length > 0 && (
                 <div className="space-y-4">
-                  {skills.map((skill) => (
-                    <div
-                      key={skill.id}
-                      className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
-                    >
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <p className="font-semibold text-white">{skill.nom}</p>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-red-300">
-                            {skill.progression}%
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSkill(skill.id, skill.nom)}
-                            disabled={deletingId === skill.id}
-                            className="text-xs font-medium text-rose-400 transition hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {deletingId === skill.id
-                              ? "Suppression..."
-                              : "Supprimer"}
-                          </button>
+                  {skills.map((skill) =>
+                    editingSkill?.id === skill.id ? (
+                      <SkillForm
+                        key={skill.id}
+                        editingSkill={editingSkill}
+                        onSaved={handleUpdatedSkill}
+                        onCancel={() => setEditingSkill(null)}
+                      />
+                    ) : (
+                      <div
+                        key={skill.id}
+                        className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <p className="font-semibold text-white">
+                            {skill.nom}
+                          </p>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-red-300">
+                              {skill.progression}%
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setEditingSkill(skill)}
+                              className="text-xs font-medium text-cyan-300 transition hover:text-cyan-200"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteSkill(skill.id, skill.nom)
+                              }
+                              disabled={deletingId === skill.id}
+                              className="text-xs font-medium text-rose-400 transition hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {deletingId === skill.id
+                                ? "Suppression..."
+                                : "Supprimer"}
+                            </button>
+                          </div>
+                        </div>
+                        <p className="mb-2 text-xs text-slate-500">
+                          {skill.niveau}
+                        </p>
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                          <div
+                            className="h-full rounded-full bg-red-500"
+                            style={{ width: `${skill.progression}%` }}
+                          />
                         </div>
                       </div>
-                      <p className="mb-2 text-xs text-slate-500">
-                        {skill.niveau}
-                      </p>
-                      <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-                        <div
-                          className="h-full rounded-full bg-red-500"
-                          style={{ width: `${skill.progression}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
               )}
             </section>

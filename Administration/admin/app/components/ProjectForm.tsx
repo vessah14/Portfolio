@@ -9,9 +9,21 @@ export type ProjectFormValue = {
   id: string;
   title: string;
   category: string;
+  categorieId: string;
   image: string;
   description: string;
   lien: string;
+  apkUrl?: string;
+};
+
+export type EditableProject = {
+  id: string;
+  titre: string;
+  categorieId: string;
+  lien: string;
+  description: string;
+  apkUrl?: string;
+  photo_Url: string;
 };
 
 type CategoryOption = {
@@ -26,6 +38,7 @@ type CreatedProject = {
   photo_Url: string;
   categorieId: string;
   lien: string;
+  apkUrl?: string;
 };
 
 const normalizeCategoryName = (value: string) => {
@@ -52,10 +65,15 @@ const normalizeCategoryName = (value: string) => {
 };
 
 export function ProjectForm({
+  editingProject,
   onSaved,
+  onCancel,
 }: {
+  editingProject?: EditableProject;
   onSaved?: (project: ProjectFormValue) => void;
+  onCancel?: () => void;
 }) {
+  const isEditing = Boolean(editingProject);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageName, setImageName] = useState("");
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -115,48 +133,69 @@ export function ProjectForm({
 
     const formData = new FormData(event.currentTarget);
     const file = formData.get("file");
+    const hasFile = file instanceof File && file.size > 0;
 
-    if (!file || !(file instanceof File) || file.size === 0) {
+    if (!isEditing && !hasFile) {
       setSubmitMessage("Une image est requise pour créer un projet.");
       setIsSubmitting(false);
       return;
     }
 
+    if (!hasFile) {
+      formData.delete("file");
+    }
+
     try {
-      const createdProject = await apiFetch<CreatedProject>("Projet", {
-        method: "POST",
-        body: formData,
-      });
+      const savedProject = isEditing
+        ? await apiFetch<CreatedProject>(`Projet/${editingProject!.id}`, {
+            method: "PUT",
+            body: formData,
+          })
+        : await apiFetch<CreatedProject>("Projet", {
+            method: "POST",
+            body: formData,
+          });
       const categoryName = categories.find(
-        (category) => category.id === createdProject.categorieId,
+        (category) => category.id === savedProject.categorieId,
       )?.nom;
 
       if (
-        !createdProject.id ||
-        !createdProject.titre ||
-        !createdProject.description ||
-        !createdProject.photo_Url ||
-        !createdProject.lien ||
+        !savedProject.id ||
+        !savedProject.titre ||
+        !savedProject.description ||
+        !savedProject.photo_Url ||
+        !savedProject.lien ||
         !categoryName
       ) {
         throw new Error("La réponse du serveur est incomplète.");
       }
 
       onSaved?.({
-        id: createdProject.id,
-        title: createdProject.titre,
+        id: savedProject.id,
+        title: savedProject.titre,
         category: categoryName,
-        image: createdProject.photo_Url,
-        description: createdProject.description,
-        lien: createdProject.lien,
+        categorieId: savedProject.categorieId,
+        image: savedProject.photo_Url,
+        description: savedProject.description,
+        lien: savedProject.lien,
+        apkUrl: savedProject.apkUrl || undefined,
       });
 
-      setSubmitMessage("Projet enregistré avec succès.");
-      event.currentTarget.reset();
-      removeImage();
+      setSubmitMessage(
+        isEditing
+          ? "Projet modifié avec succès."
+          : "Projet enregistré avec succès.",
+      );
+
+      if (!isEditing) {
+        event.currentTarget.reset();
+        removeImage();
+      }
     } catch {
       setSubmitMessage(
-        "Une erreur est survenue lors de l'enregistrement du projet.",
+        isEditing
+          ? "Une erreur est survenue lors de la modification du projet."
+          : "Une erreur est survenue lors de l'enregistrement du projet.",
       );
     } finally {
       setIsSubmitting(false);
@@ -175,7 +214,9 @@ export function ProjectForm({
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Ajouter un projet</h2>
+        <h2 className="text-2xl font-bold text-white">
+          {isEditing ? "Modifier le projet" : "Ajouter un projet"}
+        </h2>
       </div>
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         <label className="block">
@@ -184,6 +225,7 @@ export function ProjectForm({
             name="titre"
             type="text"
             required
+            defaultValue={editingProject?.titre}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>
@@ -192,7 +234,7 @@ export function ProjectForm({
           <select
             name="CategorieId"
             required
-            defaultValue=""
+            defaultValue={editingProject?.categorieId ?? ""}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Sélectionner une catégorie</option>
@@ -209,6 +251,19 @@ export function ProjectForm({
             name="Lien"
             type="url"
             required
+            defaultValue={editingProject?.lien}
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+          />
+        </label>
+        <label className="block md:col-span-2">
+          <span className="mb-2 block text-sm text-slate-300">
+            Lien de l&apos;APK (optionnel, pour les projets React Native)
+          </span>
+          <input
+            name="ApkUrl"
+            type="url"
+            placeholder="https://github.com/.../app-release.apk"
+            defaultValue={editingProject?.apkUrl}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>
@@ -218,12 +273,14 @@ export function ProjectForm({
             name="Description"
             rows={4}
             required
+            defaultValue={editingProject?.description}
             className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>
         <div className="md:col-span-2">
           <span className="mb-2 block text-sm text-slate-300">
             Image du projet
+            {isEditing && " (laisser vide pour conserver l’image actuelle)"}
           </span>
           <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/70 p-4 text-center transition hover:border-cyan-400 hover:bg-slate-950">
             {imagePreview ? (
@@ -237,6 +294,19 @@ export function ProjectForm({
                 />
                 <span className="mt-3 block truncate text-sm text-slate-300">
                   {imageName}
+                </span>
+              </div>
+            ) : isEditing && editingProject?.photo_Url ? (
+              <div className="relative w-full max-w-sm">
+                <Image
+                  src={editingProject.photo_Url}
+                  alt="Image actuelle du projet"
+                  width={800}
+                  height={600}
+                  className="h-48 w-full rounded-xl object-cover opacity-80"
+                />
+                <span className="mt-3 block text-sm text-slate-400">
+                  Image actuelle — cliquez pour la remplacer
                 </span>
               </div>
             ) : (
@@ -275,13 +345,26 @@ export function ProjectForm({
             {submitMessage}
           </p>
         )}
-        <div className="flex justify-end md:col-span-2">
+        <div className="flex justify-end gap-3 md:col-span-2">
+          {isEditing && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:border-slate-500 hover:text-white"
+            >
+              Annuler
+            </button>
+          )}
           <button
             type="submit"
             disabled={isSubmitting}
             className="rounded-xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-400/70"
           >
-            {isSubmitting ? "Enregistrement..." : "Enregistrer le projet"}
+            {isSubmitting
+              ? "Enregistrement..."
+              : isEditing
+                ? "Modifier le projet"
+                : "Enregistrer le projet"}
           </button>
         </div>
       </form>
