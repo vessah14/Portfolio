@@ -19,8 +19,11 @@ function renderDescription(text: string) {
   );
 }
 
+const DESCRIPTION_EXPAND_THRESHOLD = 160;
+
 export function ProjectCard({ project }: { project: Project }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const { t } = useLanguage();
 
   const visibleTags = project.tags.slice(0, 3);
@@ -30,14 +33,16 @@ export function ProjectCard({ project }: { project: Project }) {
   const hasProjectLink =
     Boolean(project.lien) && !isDesignGraphic && !isMobileProject;
   const hasImage = Boolean(project.image);
+  const isLongDescription =
+    project.description.length > DESCRIPTION_EXPAND_THRESHOLD;
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 transition-colors hover:border-gray-700">
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 transition-colors hover:border-gray-700">
         <button
           type="button"
           onClick={() => hasImage && setIsModalOpen(true)}
-          className="relative block h-48 w-full overflow-hidden"
+          className="relative block h-48 w-full shrink-0 overflow-hidden"
           aria-label={`${t.projects.viewImage} ${project.title}`}
           disabled={!hasImage}
         >
@@ -61,15 +66,29 @@ export function ProjectCard({ project }: { project: Project }) {
           )}
         </button>
 
-        <div className="p-5">
+        <div className="flex flex-1 flex-col p-5">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-white">{project.title}</h3>
             {project.year && <span className="text-sm text-gray-500">{project.year}</span>}
           </div>
 
-          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-400">
+          <p
+            className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-400 ${
+              isDescriptionExpanded ? "" : "line-clamp-4"
+            }`}
+          >
             {renderDescription(project.description)}
           </p>
+
+          {isLongDescription && (
+            <button
+              type="button"
+              onClick={() => setIsDescriptionExpanded((expanded) => !expanded)}
+              className="mt-1 self-start text-xs font-medium text-gray-400 underline-offset-2 hover:text-gray-200 hover:underline"
+            >
+              {isDescriptionExpanded ? t.projects.readLess : t.projects.readMore}
+            </button>
+          )}
 
           {visibleTags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
@@ -89,7 +108,7 @@ export function ProjectCard({ project }: { project: Project }) {
             </div>
           )}
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-4">
             {hasProjectLink && (
               <a
                 href={project.lien}
