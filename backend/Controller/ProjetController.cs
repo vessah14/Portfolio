@@ -32,6 +32,7 @@ public class ProjetController : ControllerBase
                 Photo_Url = p.Photo_Url,
                 CategorieId = p.CategorieId,
                 Lien = p.Lien,
+                ApkUrl = p.ApkUrl,
                 create_at = p.create_at
             })
             .ToListAsync();
@@ -92,6 +93,7 @@ public class ProjetController : ControllerBase
                 Photo_Url = imageUrl,
                 CategorieId = dto.CategorieId,
                 Lien = dto.Lien,
+                ApkUrl = string.IsNullOrWhiteSpace(dto.ApkUrl) ? null : dto.ApkUrl.Trim(),
                 create_at = DateTime.UtcNow
             };
 
@@ -147,6 +149,7 @@ public class ProjetController : ControllerBase
             projet.Description = dto.Description;
             projet.CategorieId = dto.CategorieId;
             projet.Lien = dto.Lien;
+            projet.ApkUrl = string.IsNullOrWhiteSpace(dto.ApkUrl) ? null : dto.ApkUrl.Trim();
 
             await _context.SaveChangesAsync();
 
@@ -185,6 +188,7 @@ public class ProjetController : ControllerBase
             Photo_Url = projet.Photo_Url,
             CategorieId = projet.CategorieId,
             Lien = projet.Lien,
+            ApkUrl = projet.ApkUrl,
             create_at = projet.create_at
         };
     }

@@ -8,6 +8,7 @@ namespace backend.DTOs
         public string Photo_Url { get; set; } = string.Empty;
         public Guid CategorieId { get; set; }
         public string Lien { get; set; } = string.Empty;
+        public string? ApkUrl { get; set; }
         public DateTime create_at { get; set; }
     }
 
@@ -18,5 +19,6 @@ namespace backend.DTOs
         public string Photo_Url { get; set; } = string.Empty;
         public Guid CategorieId { get; set; }
         public string Lien { get; set; } = string.Empty;
+        public string? ApkUrl { get; set; }
     }
 }

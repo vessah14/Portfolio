@@ -36,6 +36,9 @@ namespace backend.Data
                 entity.Property(p => p.Lien)
                     .HasColumnName("lien");
 
+                entity.Property(p => p.ApkUrl)
+                    .HasColumnName("apk_url");
+
                 entity.Property(p => p.titre)
                     .HasColumnName("titre");
 

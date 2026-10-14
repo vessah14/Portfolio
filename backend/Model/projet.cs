@@ -32,6 +32,9 @@ namespace backend.Model
         [Column("lien")]
         public string Lien { get; set; } = string.Empty;
 
+        [Column("apk_url")]
+        public string? ApkUrl { get; set; }
+
         [Column("create_at")]
         public DateTime create_at { get; set; }
     }
