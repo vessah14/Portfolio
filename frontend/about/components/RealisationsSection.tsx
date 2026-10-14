@@ -30,6 +30,7 @@ const normalizeCategoryName = (value: string) => {
   const map: Record<string, string> = {
     design_graphique: "Design Graphique",
     developpement_web: "Développement web",
+    developpement_mobile: "Développement Mobile",
     ui_design: "UI Design",
     developpement: "Développement",
     design: "Design",
