@@ -20,6 +20,8 @@ export default function SkillsPage() {
   const [skills, setSkills] = useState<ApiSkill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     const loadSkills = async () => {
@@ -54,6 +56,24 @@ export default function SkillsPage() {
       },
       ...current,
     ]);
+  };
+
+  const handleDeleteSkill = async (id: string, nom: string) => {
+    if (!window.confirm(`Supprimer la compétence "${nom}" ?`)) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeletingId(id);
+
+    try {
+      await apiFetch(`Competences/${id}`, { method: "DELETE" });
+      setSkills((current) => current.filter((skill) => skill.id !== id));
+    } catch {
+      setDeleteError("Impossible de supprimer cette compétence pour le moment.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -96,6 +116,9 @@ export default function SkillsPage() {
                   Les compétences sont indisponibles depuis l&apos;API.
                 </p>
               )}
+              {deleteError && (
+                <p className="mb-4 text-sm text-rose-300">{deleteError}</p>
+              )}
               {!isLoading && !hasError && skills.length === 0 && (
                 <p className="text-slate-400">
                   Aucune compétence enregistrée pour le moment.
@@ -110,9 +133,21 @@ export default function SkillsPage() {
                     >
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <p className="font-semibold text-white">{skill.nom}</p>
-                        <span className="text-sm text-red-300">
-                          {skill.progression}%
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-red-300">
+                            {skill.progression}%
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSkill(skill.id, skill.nom)}
+                            disabled={deletingId === skill.id}
+                            className="text-xs font-medium text-rose-400 transition hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {deletingId === skill.id
+                              ? "Suppression..."
+                              : "Supprimer"}
+                          </button>
+                        </div>
                       </div>
                       <p className="mb-2 text-xs text-slate-500">
                         {skill.niveau}
