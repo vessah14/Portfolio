@@ -7,6 +7,18 @@ import { Download } from "lucide-react";
 import type { Project } from "@/data/about";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
 
+function renderDescription(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+    part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
+      <strong key={index} className="font-semibold text-gray-200">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      part
+    ),
+  );
+}
+
 export function ProjectCard({ project }: { project: Project }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { t } = useLanguage();
@@ -55,8 +67,8 @@ export function ProjectCard({ project }: { project: Project }) {
             {project.year && <span className="text-sm text-gray-500">{project.year}</span>}
           </div>
 
-          <p className="mt-2 text-sm leading-relaxed text-gray-400">
-            {project.description}
+          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-400">
+            {renderDescription(project.description)}
           </p>
 
           {visibleTags.length > 0 && (
@@ -78,7 +90,7 @@ export function ProjectCard({ project }: { project: Project }) {
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-            {hasProjectLink ? (
+            {hasProjectLink && (
               <a
                 href={project.lien}
                 target="_blank"
@@ -87,7 +99,9 @@ export function ProjectCard({ project }: { project: Project }) {
               >
                 {t.projects.viewSite} →
               </a>
-            ) : (
+            )}
+
+            {!hasProjectLink && !isMobileProject && (
               <button
                 type="button"
                 onClick={() => hasImage && setIsModalOpen(true)}
