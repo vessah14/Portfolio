@@ -14,7 +14,9 @@ export function ProjectCard({ project }: { project: Project }) {
   const visibleTags = project.tags.slice(0, 3);
   const remaining = project.tags.length - visibleTags.length;
   const isDesignGraphic = project.category === "Design Graphique";
-  const hasProjectLink = Boolean(project.lien) && !isDesignGraphic;
+  const isMobileProject = project.category === "Développement Mobile";
+  const hasProjectLink =
+    Boolean(project.lien) && !isDesignGraphic && !isMobileProject;
   const hasImage = Boolean(project.image);
 
   return (
