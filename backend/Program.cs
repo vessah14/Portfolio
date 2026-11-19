@@ -91,7 +91,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var adminSeedService = scope.ServiceProvider.GetRequiredService<AdminSeedService>();
-    await adminSeedService.EnsureAdminAsync();
+    try
+    {
+        await adminSeedService.EnsureAdminAsync();
+    }
+    catch (Exception exception)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(
+            exception,
+            "La base de données est momentanément indisponible. Le backend démarre tout de même.");
+    }
 }
 
 // Configure the HTTP request pipeline.
