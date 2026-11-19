@@ -20,7 +20,6 @@ type ApiProject = {
   photo_Url: string;
   categorieId: string;
   lien: string;
-  apkUrl?: string;
 };
 
 type ProjectListItem = {
@@ -31,7 +30,6 @@ type ProjectListItem = {
   image?: string;
   description: string;
   lien?: string;
-  apkUrl?: string;
 };
 
 export default function ProjectsPage() {
@@ -68,7 +66,6 @@ export default function ProjectsPage() {
             image: project.photo_Url || undefined,
             description: project.description,
             lien: project.lien || undefined,
-            apkUrl: project.apkUrl || undefined,
           }),
         );
 
@@ -95,7 +92,6 @@ export default function ProjectsPage() {
         image: project.image,
         description: project.description,
         lien: project.lien,
-        apkUrl: project.apkUrl,
       },
       ...current,
     ]);
@@ -113,7 +109,6 @@ export default function ProjectsPage() {
               image: project.image,
               description: project.description,
               lien: project.lien,
-              apkUrl: project.apkUrl,
             }
           : item,
       ),
@@ -145,7 +140,6 @@ export default function ProjectsPage() {
     categorieId: project.categorieId,
     lien: project.lien ?? "",
     description: project.description,
-    apkUrl: project.apkUrl,
     photo_Url: project.image ?? "",
   });
 
@@ -251,16 +245,6 @@ export default function ProjectsPage() {
                                 className="inline-flex text-sm font-medium text-red-300 hover:text-red-200"
                               >
                                 Voir le site
-                              </a>
-                            )}
-                            {project.apkUrl && (
-                              <a
-                                href={project.apkUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex text-sm font-medium text-emerald-300 hover:text-emerald-200"
-                              >
-                                Télécharger l&apos;APK
                               </a>
                             )}
                           </div>

@@ -13,7 +13,6 @@ export type ProjectFormValue = {
   image: string;
   description: string;
   lien: string;
-  apkUrl?: string;
 };
 
 export type EditableProject = {
@@ -22,7 +21,6 @@ export type EditableProject = {
   categorieId: string;
   lien: string;
   description: string;
-  apkUrl?: string;
   photo_Url: string;
 };
 
@@ -38,7 +36,6 @@ type CreatedProject = {
   photo_Url: string;
   categorieId: string;
   lien: string;
-  apkUrl?: string;
 };
 
 const normalizeCategoryName = (value: string) => {
@@ -179,7 +176,6 @@ export function ProjectForm({
         image: savedProject.photo_Url,
         description: savedProject.description,
         lien: savedProject.lien,
-        apkUrl: savedProject.apkUrl || undefined,
       });
 
       setSubmitMessage(
@@ -253,18 +249,6 @@ export function ProjectForm({
             type="url"
             required
             defaultValue={editingProject?.lien}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
-          />
-        </label>
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm text-slate-300">
-            Lien de l&apos;APK (optionnel, pour les projets React Native)
-          </span>
-          <input
-            name="ApkUrl"
-            type="url"
-            placeholder="https://github.com/.../app-release.apk"
-            defaultValue={editingProject?.apkUrl}
             className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
           />
         </label>

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Download } from "lucide-react";
 
 import type { Project } from "@/data/about";
 import { useLanguage } from "@/app/i18n/LanguageProvider";
@@ -131,17 +130,6 @@ export function ProjectCard({ project }: { project: Project }) {
               </button>
             )}
 
-            {project.apkUrl && (
-              <a
-                href={project.apkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-500 hover:text-emerald-400"
-              >
-                <Download className="h-4 w-4" />
-                {t.projects.downloadApk}
-              </a>
-            )}
           </div>
         </div>
       </div>
